@@ -224,6 +224,7 @@ details.abs p { font-size: 0.98rem; line-height: 1.45; margin: 0.7rem 0 0.4rem; 
 
 /* De Finetti variants: coin or die, chosen in the prototype switcher. */
 [data-df="coin"] .df-die, [data-df="die"] .df-coin { display: none; }
+[data-sg="sift"] .sg-lewis, [data-sg="lewis"] .sg-sift { display: none; }
 .variant { font-family: var(--sans); font-size: 0.72rem; color: var(--fg-2); margin: 0.9rem 0 0; display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
 .variant button { font: 500 0.72rem var(--sans); background: transparent; color: var(--fg-2); border: 1px solid var(--rule, rgba(0,0,0,0.15)); padding: 0.2rem 0.6rem; cursor: pointer; }
 .variant button:hover { color: var(--fg); }

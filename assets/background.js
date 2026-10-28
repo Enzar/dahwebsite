@@ -99,7 +99,7 @@ function runStage(canvas, fixed) {
   // paths light red. Each roll pulses the corner it favours.
   // =====================================================================
   function Simplex() {
-    var N = 7, DT = 0.55, MAXOBS = 400, QDOG = 0.05, SUB = 10; // runs end on agreement, not on a timer: median about 36 rolls
+    var N = 7, DT = 0.55, MAXOBS = 100000, QDOG = 0.05, SUB = 10; // runs end on agreement, never on a timer (MAXOBS is only a guard): median about 36 rolls
     var LIK = [[0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]]; // each hypothesis: its face half the time, the others a quarter each
     var V, agents, truth, rolls, steps, outcome, t, phase, fade, clock, pulses, flashed, glowT;
     function layout() { // leave room around the triangle for the face symbols
@@ -207,10 +207,8 @@ function runStage(canvas, fixed) {
         }
         var head = at(a, s);
         if (total < s * SUB) { ctx.strokeStyle = ink(0.44 * fade); ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(head.x, head.y); ctx.stroke(); }
-        var isStuck = phase !== "run" && phase !== "enter" && outcome === "apart" && a.path[steps][truth] < 0.5;
         glow(head.x, head.y, 10, pal.ink, 0.15 * fade * pal.strength);
         ctx.fillStyle = ink(0.78 * fade); ctx.beginPath(); ctx.arc(head.x, head.y, 2.2, 0, Math.PI * 2); ctx.fill();
-        if (isStuck) { ctx.strokeStyle = ink(0.55 * fade); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(head.x, head.y, 6, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1.2; }
       });
       // Agreement on the truth: the true corner turns red. The page-wide wash is the single pulse.
       if (outcome === "found" && (phase === "found" || phase === "dissolve")) {
@@ -770,6 +768,9 @@ function runStage(canvas, fixed) {
   }
 
   var SCENES = { simplex: Simplex, merging: Merging, atomless: Atomless, signals: Signals, wind: Wind };
+  // The sifting game (Herrmann and VanDrunen) lives in assets/sifting.js and borrows this stage's helpers.
+  var ENV = { ctx: ctx, W: function () { return W; }, H: function () { return H; }, STAGE: STAGE, root: root, pal: pal, clamp: clamp, lerp: lerp, smoother: smoother, bezier: bezier, glow: glow, ink: ink, accent: accent, mix: mix };
+  if (window.DH_SCENE_SIFTING) SCENES.sifting = function () { return window.DH_SCENE_SIFTING(ENV); };
 
   // ---------- Harness ----------
   function size() {
@@ -846,6 +847,7 @@ function runStage(canvas, fixed) {
   });
   document.addEventListener("dh:prefs", function () {
     readPalette();
+    if (STAGE && fixed) { var w0 = W; size(); if (W !== w0 && scene.resize) scene.resize(); } // a stage shown by a switch was sized while hidden
     if (!fixed && (root.getAttribute("data-bg") || "simplex") !== sceneName) start(); else if (reduceQuery.matches) render();
   });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureBand);
@@ -862,3 +864,4 @@ function runStage(canvas, fixed) {
 }
 runStage(document.querySelector(".stage--simplex canvas") || document.getElementById("background"), null);
 (function () { var c = document.querySelector(".stage--signals canvas"); if (c) runStage(c, "signals"); })();
+(function () { var c = document.querySelector(".stage--sifting canvas"); if (c && window.DH_SCENE_SIFTING) runStage(c, "sifting"); })();

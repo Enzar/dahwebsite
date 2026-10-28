@@ -11,8 +11,9 @@
 // that round (the sender's signal, the receiver's attention, the receiver's act) is returned with
 // one more of its colour; after a failure nothing changes.
 //
-// Each run has one signal feature and two or three noise features, in random order, so the viewer
-// cannot tell from position which row carries the signal. Drawing: states on the left (outlined
+// Each run has one signal feature and two noise features, in random order. Each noise feature is fed
+// by its own coin (drawn beside it, flipping on each visible round), so it is plain that its value
+// comes from a coin, not from the state; the signal feature is fed by the sender's strands. Drawing: states on the left (outlined
 // shapes), the features in the middle (each a pill holding its two values, two arbitrary marks),
 // acts on the right (the same shapes, filled). The sender's strands run only to the signal feature,
 // since only it depends on what the sender does. A receiver strand runs from each value of each
@@ -28,7 +29,8 @@
 // A run succeeds when the agents have a signaling system on the signal feature (each state its own
 // most-used signal, read back correctly), the receiver attends to the signal feature with
 // probability above 0.75, and expected success is above 0.85. Then the system lights red. If that
-// has not happened by the round budget (44 seconds of learning), the run fades. Noise slows learning
+// has not happened when learning has frozen (expected success flat over 100,000 rounds, after at
+// least 200,000), the run fades. There is no time limit. Noise slows learning
 // a great deal, as in the paper. Measured headlessly over 1,000 runs: 71% succeed (73% with two noise
 // features, 69% with three), at a median of 23 s of screen time (10th to 90th percentile 12 to 39 s,
 // a median of about 3,000 rounds). Failed runs are mostly still unsettled; about a quarter of them
@@ -61,7 +63,7 @@
     var W = env.W(), H = env.H();
 
     var NS = 2, K, sig, S, A, R, rounds, shuffles, t, phase, pulses, nextPulse, fade, carry, found, sweep, marks;
-    var MAXT = 44, MAXR = 250000, ATTN = 0.75, ACC = 0.85;
+    var MAXT = 600, ATTN = 0.75, ACC = 0.85, hist, checkAt; // MAXT is only a guard; runs end on success or once learning has frozen
     var xs, xm, xa, ys = [], yf = [], gap, pw;
     function layout() {
       W = env.W(); H = env.H();
@@ -72,13 +74,13 @@
     }
     function vy(k, v) { return yf[k] + (v ? 1 : -1) * gap / 2; } // the two values of feature k, one above the other
     function reset() {
-      K = 3 + Math.floor(Math.random() * 2); // the signal feature and two or three noise features
+      K = 3; // the signal feature and two noise features
       sig = Math.floor(Math.random() * K);
       layout();
       S = [[1, 1], [1, 1]]; A = []; R = [];
       for (var k = 0; k < K; k++) { A.push(1); R.push([[1, 1], [1, 1]]); }
       marks = [0, 1, 2, 3, 4, 5, 6, 7]; for (var i = 7; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = marks[i]; marks[i] = marks[j]; marks[j] = x; }
-      rounds = 0; shuffles = 0; t = 0; phase = "enter"; pulses = []; nextPulse = 0.8; fade = 0; carry = 0; found = null; sweep = 0;
+      rounds = 0; hist = {}; checkAt = 10000; shuffles = 0; t = 0; phase = "enter"; pulses = []; nextPulse = 0.8; fade = 0; carry = 0; found = null; sweep = 0;
     }
     function pick(row) { var tot = 0, i; for (i = 0; i < row.length; i++) tot += row[i]; var u = Math.random() * tot; for (i = 0; i < row.length; i++) { u -= row[i]; if (u <= 0) return i; } return row.length - 1; }
     function prob(row, j) { var tot = 0; for (var i = 0; i < row.length; i++) tot += row[i]; return row[j] / tot; }
@@ -124,9 +126,18 @@
         while (carry >= 1) { play(false); carry -= 1; }
         nextPulse -= dt;
         if (nextPulse <= 0) { var r = play(true); r.t = 0; pulses.push(r); nextPulse = t < 12 ? 1.6 : 1.4; shuffles++; } // one visible round at a time: each takes 1.3 s
-        var sys = prob(A, sig) > ATTN ? system() : null;
-        if (sys && success() > ACC) { found = sys; phase = "found"; t = 0; }
-        else if (t > MAXT || rounds > MAXR) { phase = "lost"; t = 0; }
+        // Success, as the eye reads it: a signaling system on the signal feature, and the receiver
+        // looks at the signal more than at any other feature (and at it more often than not).
+        var mostly = prob(A, sig) > 0.5, e = success(); for (var q = 0; q < K; q++) if (q !== sig && A[q] >= A[sig]) mostly = false;
+        var sys = mostly && e > 0.7 && rounds > 300 ? system() : null; // not on the first lucky rounds
+        if (rounds >= checkAt) { hist[checkAt] = e; checkAt += 10000; }
+        // Frozen: after 200,000 rounds, expected success has moved less than 0.005 over the last
+        // 100,000. By then the urns are so full that a run stuck short of a signaling system stays
+        // stuck, like partial pooling in the Lewis–Skyrms figure. There is no clock.
+        var a0 = hist[checkAt - 10000], a1 = hist[checkAt - 110000];
+        var frozen = rounds > 200000 && a0 !== undefined && a1 !== undefined && Math.abs(a0 - a1) < 0.005;
+        if (sys) { found = sys; phase = "found"; t = 0; }
+        else if (frozen || t > MAXT) { phase = "lost"; t = 0; }
       }
       pulses.forEach(function (p) { p.t += dt; });
       pulses = pulses.filter(function (p) { return p.t < 1.9; });
@@ -189,10 +200,13 @@
           var g = 1 - Math.min(1, Math.abs(u - 0.52) / 0.12); if (g > 0) look[p.f] = Math.max(look[p.f] || 0, g * al);
           if (u >= 0.55 && u < 1) { seg = receiver(p.f, p.vals[p.f], p.a); w = smoother((u - 0.55) / 0.45); trail(seg, w, al); dot(bezier.apply(null, seg.concat([w])), al); }
         }
-        if (u >= 1) { // the round's outcome, at the act: success swells with a ring; failure shrinks and shakes
+        if (u >= 1) { // the round's outcome, as in the other signaling figure: success flashes the reinforced path and swells the act; failure shrinks and shakes it
           var x = clamp((p.t - T) / 0.6, 0, 1); actFx[p.a] = { ok: p.ok, x: x };
-          if (p.ok) { ctx.strokeStyle = ink(0.7 * (1 - x) * f); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(xa + 2, ys[p.a], 8 + 14 * smoother(x), 0, Math.PI * 2); ctx.stroke(); }
-          else { var cx = xa + 16, cy = ys[p.a] - 9, d = 3.2; ctx.strokeStyle = ink(0.7 * (1 - x) * f); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(cx - d, cy - d); ctx.lineTo(cx + d, cy + d); ctx.moveTo(cx + d, cy - d); ctx.lineTo(cx - d, cy + d); ctx.stroke(); }
+          if (p.ok) {
+            var k2 = 1 - smoother(x);
+            partial(sender(p.s, p.m), 0, 1, 2.6, ink(0.55 * k2 * f)); partial(receiver(p.f, p.vals[p.f], p.a), 0, 1, 2.6, ink(0.55 * k2 * f));
+            ctx.strokeStyle = ink(0.75 * k2 * f); ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(xa + 2, ys[p.a], 9 + 15 * smoother(x), 0, Math.PI * 2); ctx.stroke();
+          }
         }
       });
       if (found) { // the signaling system, swept red: sender's strands, then the receiver's on the signal feature
@@ -204,12 +218,15 @@
       // Features: each a pill holding its two values. The outline shows the receiver's attention.
       var done = found && sweep >= 0.5 ? smoother((sweep - 0.5) * 2) : 0;
       for (k = 0; k < K; k++) {
-        if (k !== sig) { // a noise feature: a patch of static where the sender's strands would arrive, re-scattered every visible round
-          ctx.fillStyle = ink(0.42 * f);
-          for (i = 0; i < 9; i++) {
-            var h1 = hash(shuffles * 131 + k * 17 + i * 3), h2 = hash(shuffles * 71 + k * 29 + i * 5 + 1);
-            ctx.beginPath(); ctx.arc(xm - pw - 9 - 12 * h1, yf[k] + (h2 - 0.5) * (gap + 8), 0.9, 0, Math.PI * 2); ctx.fill();
-          }
+        if (k !== sig) { // a noise feature: its own coin, joined to it by a dashed line, flips on each visible round
+          var cx = xm - pw - 34, cy = yf[k], flip = 1;
+          pulses.forEach(function (p) { var u = p.t / T; if (u > 0.36 && u < 0.5) flip = Math.min(flip, Math.abs(Math.cos((u - 0.36) / 0.14 * Math.PI * 2))); });
+          ctx.setLineDash([2, 3]); ctx.strokeStyle = ink(0.35 * f); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx + 8, cy); ctx.lineTo(xm - pw - 3, cy); ctx.stroke(); ctx.setLineDash([]);
+          ctx.save(); ctx.translate(cx, cy); ctx.scale(Math.max(0.12, flip), 1);
+          ctx.strokeStyle = ink(0.7 * f); ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, Math.PI * 2); ctx.stroke();
+          ctx.lineWidth = 0.9; ctx.beginPath(); ctx.arc(0, 0, 3.6, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+          if (STAGE) { ctx.font = "10px " + (getComputedStyle(root).getPropertyValue("--sans") || "sans-serif").trim(); ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillStyle = ink(0.5 * f); ctx.fillText("coin", cx, cy + 11); }
         }
         ctx.save(); ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "rgba(0,0,0," + (0.92 * f) + ")"; pill(k, 0); ctx.fill(); ctx.restore();
         var lk = look[k] || 0, red = k === sig ? done : 0;
@@ -225,7 +242,7 @@
       for (i = 0; i < NS; i++) {
         ctx.strokeStyle = mix(0.75 * f * pal.strength, end); ctx.lineWidth = 1.3; shape(i, xs - 2, ys[i], 6.5); ctx.stroke();
         var fx = actFx[i], ax = xa + 2, ar = 6.5;
-        if (fx) { var bump = Math.sin(Math.PI * fx.x); if (fx.ok) ar *= 1 + 0.5 * bump; else { ar *= 1 - 0.35 * bump; ax += 3 * Math.sin(fx.x * 28) * (1 - fx.x); } }
+        if (fx) { var bump = Math.sin(Math.PI * fx.x); if (fx.ok) ar *= 1 + 0.7 * bump; else { ar *= 1 - 0.35 * bump; ax += 3.5 * Math.sin(fx.x * 28) * (1 - fx.x); } }
         ctx.fillStyle = mix(0.75 * f * pal.strength, end); shape(i, ax, ys[i], ar); ctx.fill();
       }
     }

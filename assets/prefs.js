@@ -17,7 +17,7 @@
   if (!root.getAttribute("data-palette")) root.setAttribute("data-palette", window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "night" : "paper"); // the system setting, until the reader chooses
   if (!root.getAttribute("data-bg")) root.setAttribute("data-bg", "simplex");
   // Draft figure variants, chosen under each figure.
-  var VARIANTS = { df: ["die", "coin"] };
+  var VARIANTS = { df: ["die", "coin"], sg: ["lewis", "sift"] };
   Object.keys(VARIANTS).forEach(function (k) { var v = q[k] || get(k); root.setAttribute("data-" + k, VARIANTS[k].indexOf(v) >= 0 ? v : VARIANTS[k][0]); });
   window.DH_PREFS = { PALETTES: PALETTES, BGS: BGS, VARIANTS: VARIANTS, set: set };
 })();
