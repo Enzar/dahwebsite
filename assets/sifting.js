@@ -125,7 +125,7 @@
         carry += rate * dt;
         while (carry >= 1) { play(false); carry -= 1; }
         nextPulse -= dt;
-        if (nextPulse <= 0) { var r = play(true); r.t = 0; pulses.push(r); nextPulse = t < 12 ? 1.6 : 1.4; shuffles++; } // one visible round at a time: each takes 1.3 s
+        if (nextPulse <= 0) { var r = play(true); r.t = 0; pulses.push(r); nextPulse = t < 14 ? 3.5 : 3.1; shuffles++; } // one visible round at a time: each takes 2.8 s
         // Success, as the eye reads it: a signaling system on the signal feature, and the receiver
         // looks at the signal more than at any other feature (and at it more often than not).
         var mostly = prob(A, sig) > 0.5, e = success(); for (var q = 0; q < K; q++) if (q !== sig && A[q] >= A[sig]) mostly = false;
@@ -140,7 +140,7 @@
         else if (frozen || t > MAXT) { phase = "lost"; t = 0; }
       }
       pulses.forEach(function (p) { p.t += dt; });
-      pulses = pulses.filter(function (p) { return p.t < 1.9; });
+      pulses = pulses.filter(function (p) { return p.t < 3.4; });
       if (phase === "found") { sweep = smoother(t / 1.6); if (t > 4.6) { phase = "dissolve"; t = 0; } }
       if (phase === "lost") { if (t > 1.2) { phase = "dissolve"; t = 0; } }
       if (phase === "dissolve") { fade = 1 - smoother(t / 1.8); if (t > 1.8) { phase = "gap"; t = 0; } }
@@ -188,18 +188,26 @@
         var pr = att[k] * prob(R[k][v], a);
         strand(receiver(k, v, a), 0.5 + 1.7 * pr, ink((0.03 + 0.27 * pr) * f));
       }
-      // Visible rounds. 0 to 0.45: the sender's dot runs to the signal. Then every feature shows its
-      // value, and the feature the receiver attends to flashes. 0.55 to 1: her dot runs to the act.
-      var lit = [], look = [], actFx = [], T = 1.3;
+      // Visible rounds, in four slow beats: nature picks a state (it pulses); the sender's dot runs
+      // to the signal feature; every feature shows its value, and the receiver's eye scans the
+      // features and settles on one, with a faint beam; then her dot runs from that feature to her act.
+      var lit = [], look = [], actFx = [], T = 2.8, eye = null, statePulse = [];
+      var ex = xm + (xa - xm) * 0.42, ey = 0.12 * H; // the receiver's eye, above her side of the figure
       pulses.forEach(function (p) {
         var u = clamp(p.t / T, 0, 1), al = (p.t < T ? 1 : 1 - (p.t - T) / 0.6) * f, seg, w;
-        if (u < 0.45) { seg = sender(p.s, p.m); w = smoother(u / 0.45); trail(seg, w, al); dot(bezier.apply(null, seg.concat([w])), al); }
-        else {
-          var shown = smoother((u - 0.45) / 0.06) * (u < 1 ? 1 : al);
+        if (u < 0.1) statePulse[p.s] = Math.max(statePulse[p.s] || 0, u / 0.1);
+        else if (u < 0.36) { seg = sender(p.s, p.m); w = smoother((u - 0.1) / 0.26); trail(seg, w, al); dot(bezier.apply(null, seg.concat([w])), al); }
+        if (u >= 0.36) {
+          var shown = smoother((u - 0.36) / 0.05) * (u < 1 ? 1 : al);
           for (var j = 0; j < K; j++) lit[j] = { v: p.vals[j], a: Math.max(lit[j] ? lit[j].a : 0, shown) };
-          var g = 1 - Math.min(1, Math.abs(u - 0.52) / 0.12); if (g > 0) look[p.f] = Math.max(look[p.f] || 0, g * al);
-          if (u >= 0.55 && u < 1) { seg = receiver(p.f, p.vals[p.f], p.a); w = smoother((u - 0.55) / 0.45); trail(seg, w, al); dot(bezier.apply(null, seg.concat([w])), al); }
         }
+        if (u >= 0.42 && u < 0.97) { // her choice of where to look: the eye scans the features, then settles
+          var sc = clamp((u - 0.42) / 0.16, 0, 1), target = p.f;
+          var pos = sc < 1 ? (K - 1) * (0.5 - 0.5 * Math.cos(Math.PI * 2 * sc)) * (1 - sc) + target * smoother(sc) : target;
+          eye = { y: lerp(yf[0], yf[K - 1], pos / (K - 1)), a: al, settled: sc >= 1 };
+          if (sc >= 1) look[p.f] = Math.max(look[p.f] || 0, al);
+        }
+        if (u >= 0.62 && u < 1) { seg = receiver(p.f, p.vals[p.f], p.a); w = smoother((u - 0.62) / 0.38); trail(seg, w, al); dot(bezier.apply(null, seg.concat([w])), al); }
         if (u >= 1) { // the round's outcome, as in the other signaling figure: success flashes the reinforced path and swells the act; failure shrinks and shakes it
           var x = clamp((p.t - T) / 0.6, 0, 1); actFx[p.a] = { ok: p.ok, x: x };
           if (p.ok) {
@@ -209,6 +217,18 @@
           }
         }
       });
+      // The receiver's eye, always shown faintly; during a round it looks at a feature through a beam.
+      (function () {
+        var a = eye ? eye.a : 0.35 * f, ty = eye ? eye.y : (yf[0] + yf[K - 1]) / 2;
+        if (eye) { // the beam: a narrow wedge from the eye to the feature it is looking at
+          var bx = xm + pw + 4, half = gap / 2 + 12;
+          ctx.fillStyle = ink((eye.settled ? 0.12 : 0.07) * eye.a); ctx.beginPath(); ctx.moveTo(ex - 9, ey + 4); ctx.lineTo(bx, ty - half); ctx.lineTo(bx, ty + half); ctx.closePath(); ctx.fill();
+        }
+        var dx = clamp((xm - ex) / 60, -1, 1), dy = clamp((ty - ey) / 120, -1, 1); // the pupil points where she looks
+        ctx.strokeStyle = ink(0.75 * a); ctx.lineWidth = 1.3; ctx.beginPath();
+        ctx.moveTo(ex - 10, ey); ctx.quadraticCurveTo(ex, ey - 8, ex + 10, ey); ctx.quadraticCurveTo(ex, ey + 8, ex - 10, ey); ctx.stroke();
+        ctx.fillStyle = ink(0.85 * a); ctx.beginPath(); ctx.arc(ex + 3 * dx, ey + 2.4 * dy, 2.6, 0, Math.PI * 2); ctx.fill();
+      })();
       if (found) { // the signaling system, swept red: sender's strands, then the receiver's on the signal feature
         for (i = 0; i < NS; i++) {
           partial(sender(i, found[i]), 0, clamp(sweep * 2, 0, 1), 1.9, accent(0.78 * f));
@@ -241,6 +261,7 @@
       var end = found && sweep >= 1 ? 1 : 0;
       for (i = 0; i < NS; i++) {
         ctx.strokeStyle = mix(0.75 * f * pal.strength, end); ctx.lineWidth = 1.3; shape(i, xs - 2, ys[i], 6.5); ctx.stroke();
+        if (statePulse[i]) { var sp = statePulse[i]; ctx.strokeStyle = ink(0.6 * (1 - sp) * f); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(xs - 2, ys[i], 8 + 12 * smoother(sp), 0, Math.PI * 2); ctx.stroke(); } // nature picks this state
         var fx = actFx[i], ax = xa + 2, ar = 6.5;
         if (fx) { var bump = Math.sin(Math.PI * fx.x); if (fx.ok) ar *= 1 + 0.7 * bump; else { ar *= 1 - 0.35 * bump; ax += 3.5 * Math.sin(fx.x * 28) * (1 - fx.x); } }
         ctx.fillStyle = mix(0.75 * f * pal.strength, end); shape(i, ax, ys[i], ar); ctx.fill();
