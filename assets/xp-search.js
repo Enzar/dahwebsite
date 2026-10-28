@@ -15,7 +15,7 @@
   if (!targets.length) return;
   var root = document.documentElement, canvas, ctx, DPR = 1, raf = 0, last = 0;
   var active = null, hover = false;
-  var CFG = { depth: 5, cardDepth: 7, pWitness: 0.4, speed: 160, walkFactor: 3.2, backFactor: 1.6, deadEnd: 0.24, decide: 0.05,
+  var CFG = { depth: 5, cardDepth: 7, pWitness: 0.4, speed: 160, walkFactor: 5.5, backFactor: 1.6, deadEnd: 0.24, decide: 0.05,
               sweep: 1.1, hold: 1.4, rest: 0.7, dissolve: 1.7, gap: 0.8, fadeOut: 3.9 };
   var GREEN = "31,164,99";
 
@@ -43,7 +43,7 @@
     var k;
     if (witness) k = Math.random() < 0.55 ? 2 : 1;
     else if (depth >= D - 1) k = 0; // only the witness branch reaches full depth
-    else k = Math.random() < (big ? 0.97 - 0.07 * depth : 0.9 - 0.1 * depth) ? (Math.random() < 0.5 ? 2 : 1) : 0;
+    else k = Math.random() < (big ? 1 - 0.03 * depth : 0.9 - 0.1 * depth) ? (Math.random() < (big ? 0.68 : 0.5) ? 2 : 1) : 0; // card trees: about 48 nodes on average
     var w = witness ? Math.floor(Math.random() * k) : -1;
     // Children split the parent's sector, widened so siblings never run nearly parallel.
     var span = Math.max(a1 - a0, 1.0), b0 = mid - span / 2;
