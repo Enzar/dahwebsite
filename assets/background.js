@@ -1,7 +1,7 @@
 // Background scenes for danielherrmann.ca (prototype).
 //
 // Three scenes, each a small honest model of something in the research:
-//   simplex       Inquiry in the probability simplex: three hypotheses, each agent sees its own rolls.
+//   simplex       Inquiry in the probability simplex: three hypotheses; shared rolls, or each agent its own.
 //   merging       Merging of opinions: agents with different priors, shared evidence.
 //   atomless      Conditioning as an endless zoom into an atomless algebra.
 //   signals       A Lewis signaling game learned by Roth–Erev reinforcement.
@@ -92,16 +92,25 @@ function runStage(canvas, fixed) {
   // triangle is a credence over them. Seven agents start with different priors. Each agent
   // other than the first independently, with probability 0.05, has ruled one hypothesis out in
   // advance: its prior lies on the edge opposite that corner. Nature picks the true hypothesis
-  // at random. Each agent rolls the same die for itself, so each sees its own evidence, and
-  // conditions on its own rolls. Open-minded agents each converge on the true corner (Bayesian
-  // consistency: finitely many hypotheses that predict differently, and the truth given positive
-  // credence). An agent that ruled the truth out can never reach it: conditioning keeps it on its
-  // edge. So the agents come to agree only if every one of them left the truth open. When they
-  // do, the true corner lights red. The first agent is ringed; its rolls are the strip under the
-  // figure and pulse the corners. Every agent's rolls are listed under How it works.
+  // at random. A switch under the figure (data-ev on <html>) picks the evidence. "shared"
+  // (default): all agents see the same rolls and condition on them; open-minded agents are pulled
+  // to the truth and to one another (Blackwell and Dubins's merging of opinions). "own": each agent
+  // rolls the die for itself; they still converge, each on its own evidence (Bayesian consistency:
+  // finitely many hypotheses that predict differently, the truth given positive credence). Either
+  // way an agent that ruled the truth out can never reach it: conditioning keeps it on its edge. So
+  // the agents come to agree only if every one of them left the truth open. When they do, the true
+  // corner lights red. The first agent is always open-minded; in "own" it is ringed, its rolls are
+  // the strip under the figure and pulse the corners, and How it works lists every agent's rolls.
+  // Flipping the switch starts a new run.
   // =====================================================================
   function Simplex() {
-    var N = 7, DT = 0.45, MAXOBS = 100000, QDOG = 0.05, SUB = 10, REP = 0; // runs end on agreement, never on a timer (MAXOBS is only a guard): median about 67 rolls, 90th percentile about 103
+    var N = 7, DT = 0.55, MAXOBS = 100000, QDOG = 0.05, SUB = 10, REP = 0, share = 1; // runs end on agreement, never on a timer (MAXOBS is only a guard): median about 37 rolls shared, 68 own
+    function readShare() { share = root.getAttribute && root.getAttribute("data-ev") === "own" ? 0 : 1; DT = 0.55 - 0.1 * (1 - share); }
+    function restart() { // the switch was flipped: a new run with the new evidence
+      if (share === (root.getAttribute && root.getAttribute("data-ev") === "own" ? 0 : 1)) return;
+      if (reduceQuery.matches) { start(); return; }
+      if (phase !== "dissolve" && phase !== "gap") { phase = "dissolve"; t = 0; }
+    }
     var LIK = [[0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]]; // each hypothesis: its face half the time, the others a quarter each
     var V, agents, truth, rolls, steps, outcome, t, phase, fade, clock, pulses, flashed, glowT;
     function layout() { // leave room around the triangle for the face symbols
@@ -115,7 +124,7 @@ function runStage(canvas, fixed) {
     // The whole run is simulated at the start, so the dots can glide along smooth curves.
     // The agents still learn one roll at a time; only the drawing looks one roll ahead.
     function reset() {
-      agents = null; layout();
+      agents = null; layout(); readShare();
       truth = Math.floor(Math.random() * 3);
       agents = [];
       for (var i = 0; i < N; i++) {
@@ -126,8 +135,9 @@ function runStage(canvas, fixed) {
       outcome = null; var n = 0;
       while (!outcome) {
         n++;
-        agents.forEach(function (a) { // each agent rolls the die for itself
-          var u = Math.random(), k = u < LIK[truth][0] ? 0 : u < LIK[truth][0] + LIK[truth][1] ? 1 : 2, c = a.path[a.path.length - 1];
+        var roll = function () { var u = Math.random(); return u < LIK[truth][0] ? 0 : u < LIK[truth][0] + LIK[truth][1] ? 1 : 2; }, common = roll();
+        agents.forEach(function (a) { // each agent sees the shared roll with probability share, else rolls for itself
+          var k = Math.random() < share ? common : roll(), c = a.path[a.path.length - 1];
           a.rolls.push(k); a.path.push(norm([c[0] * LIK[0][k], c[1] * LIK[1][k], c[2] * LIK[2][k]]));
         });
         var last = function (a) { return a.path[a.path.length - 1]; };
@@ -214,7 +224,7 @@ function runStage(canvas, fixed) {
         if (total < s * SUB) { ctx.strokeStyle = ink(0.44 * fade); ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(head.x, head.y); ctx.stroke(); }
         glow(head.x, head.y, 10, pal.ink, 0.15 * fade * pal.strength);
         ctx.fillStyle = ink(0.78 * fade); ctx.beginPath(); ctx.arc(head.x, head.y, 2.2, 0, Math.PI * 2); ctx.fill();
-        if (a === agents[REP]) { ctx.strokeStyle = ink(0.7 * fade); ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(head.x, head.y, 5.5, 0, Math.PI * 2); ctx.stroke(); } // the agent whose rolls are listed
+        if (share < 1 && a === agents[REP]) { ctx.strokeStyle = ink(0.7 * fade); ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(head.x, head.y, 5.5, 0, Math.PI * 2); ctx.stroke(); } // the agent whose rolls are listed
       });
       // Agreement on the truth: the true corner turns red. The page-wide wash is the single pulse.
       if (outcome === "found" && (phase === "found" || phase === "dissolve")) {
@@ -223,7 +233,7 @@ function runStage(canvas, fixed) {
         ctx.fillStyle = accent(k * fade); ctx.beginPath(); ctx.arc(c.x, c.y, 2.4 + 2.6 * k, 0, Math.PI * 2); ctx.fill();
       }
     }
-    return { reset: reset, update: update, draw: draw, resize: layout, warm: 14, info: function () { return { phase: phase, obs: Math.floor(progress()), truth: truth, outcome: outcome }; } };
+    return { reset: reset, update: update, draw: draw, resize: layout, restart: restart, warm: 14, info: function () { return { phase: phase, obs: Math.floor(progress()), truth: truth, outcome: outcome }; } };
   }
 
   // =====================================================================
@@ -854,7 +864,7 @@ function runStage(canvas, fixed) {
   document.addEventListener("dh:prefs", function () {
     readPalette();
     if (STAGE && fixed) { var w0 = W; size(); if (W !== w0 && scene.resize) scene.resize(); } // a stage shown by a switch was sized while hidden
-    if (!fixed && (root.getAttribute("data-bg") || "simplex") !== sceneName) start(); else if (reduceQuery.matches) render();
+    if (!fixed && (root.getAttribute("data-bg") || "simplex") !== sceneName) start(); else if (scene.restart) scene.restart(); else if (reduceQuery.matches) render();
   });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureBand);
 

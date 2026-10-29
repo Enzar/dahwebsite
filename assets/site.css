@@ -229,6 +229,7 @@ details.abs p { font-size: 0.98rem; line-height: 1.45; margin: 0.7rem 0 0.4rem; 
 .variant button { font: 500 0.72rem var(--sans); background: transparent; color: var(--fg-2); border: 1px solid var(--rule, rgba(0,0,0,0.15)); padding: 0.2rem 0.6rem; cursor: pointer; }
 .variant button:hover { color: var(--fg); }
 .variant button[aria-pressed="true"] { color: var(--fg); border-color: var(--red); }
+[data-ev="shared"] .ev-own, [data-ev="own"] .ev-shared { display: none; }
 .hero--home { padding-block: 3.4rem 1.6rem; }
 /* The photo sits beside the headline, so the first figure starts higher on the page. */
 .hero--home { grid-template-columns: var(--rail) minmax(0, 1fr); column-gap: var(--gap); align-items: center; }

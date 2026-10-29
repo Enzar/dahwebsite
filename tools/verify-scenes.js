@@ -6,8 +6,9 @@ let simplexSrc = grab('Simplex', 'Merging').replace('return { reset: reset,', 'r
 let signalsSrc = grab('Signals', 'Wind').replace('return { reset: reset,', 'return { get S(){return S}, get R(){return R}, get found(){return found}, get phase(){return phase}, get rounds(){return rounds}, success: success, system: system, reset: reset,');
 const ctxStub = new Proxy({}, { get: () => function () { return { addColorStop() {} }; }, set: () => true });
 const env = `
-var W = 600, H = 520, ctx = ctxStub, STAGE = true, root = {}, pal = { ink: "0,0,0", accent: "170,0,0", strength: 1 };
-var window = {}, document = { dispatchEvent(){} };
+var W = 600, H = 520, ctx = ctxStub, STAGE = true, root = { getAttribute(k){ return k === "data-ev" ? EV : null; } }, pal = { ink: "0,0,0", accent: "170,0,0", strength: 1 };
+var EV = "shared", window = {}, document = { dispatchEvent(){} }, reduceQuery = { matches: false };
+function start(){}
 function CustomEvent(){}
 function getComputedStyle(){ return { getPropertyValue(){ return ""; } }; }
 function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
@@ -18,32 +19,38 @@ function ink(){ return ""; } function accent(){ return ""; } function mix(){ ret
 function glyph(){} function glow(){} function emitRoll(){}
 function bezier(p0){ return p0; }
 `;
-const make = new Function('ctxStub', env + simplexSrc + signalsSrc + 'return { Simplex: Simplex, Signals: Signals };')(ctxStub);
+const make = new Function('ctxStub', env + simplexSrc + signalsSrc + 'return { Simplex: Simplex, Signals: Signals, setShare: function (v) { EV = v === 1 ? "shared" : "own"; } };')(ctxStub);
 
-// ---- Simplex: every path is Bayesian conditioning on that agent's own rolls, and the outcome matches its definition.
+// ---- Simplex: every path is Bayesian conditioning on the rolls that agent saw, and the outcome matches its definition.
+// Checked at both settings of the switch. Shared: every agent sees the same rolls. Own: agents' rolls coincide only by chance (3/8).
 const LIK = [[0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]];
-let bad = 0, found = 0, apart = 0, N = 3000, lens = [];
-for (let r = 0; r < N; r++) {
-  const s = make.Simplex(); s.reset();
-  const A = s.agents, rolls = s.rolls, T = s.truth;
-  if (A[0].ruled !== -1 || rolls !== A[0].rolls) bad++; // the ringed agent is open-minded, and the listed rolls are its own
-  for (const a of A) {
-    let c = a.path[0].slice();
-    if (a.ruled >= 0 && c[a.ruled] !== 0) bad++;
-    if (a.rolls.length !== rolls.length) bad++;
-    for (let i = 0; i < a.rolls.length; i++) {
-      const k = a.rolls[i]; let z = [0, 1, 2].map(j => c[j] * LIK[j][k]); const sum = z[0] + z[1] + z[2]; c = z.map(v => v / sum);
-      const p = a.path[i + 1]; if (Math.max(...[0, 1, 2].map(j => Math.abs(p[j] - c[j]))) > 1e-12) bad++;
+for (const share of [1, 0]) {
+  make.setShare(share);
+  let bad = 0, found = 0, apart = 0, N = 1500, lens = [], same = 0, pairs = 0;
+  for (let r = 0; r < N; r++) {
+    const s = make.Simplex(); s.reset();
+    const A = s.agents, rolls = s.rolls, T = s.truth;
+    if (A[0].ruled !== -1 || rolls !== A[0].rolls) bad++; // the ringed agent is open-minded, and the listed rolls are its own
+    for (const a of A) {
+      let c = a.path[0].slice();
+      if (a.ruled >= 0 && c[a.ruled] !== 0) bad++;
+      if (a.rolls.length !== rolls.length) bad++;
+      for (let i = 0; i < a.rolls.length; i++) {
+        const k = a.rolls[i]; let z = [0, 1, 2].map(j => c[j] * LIK[j][k]); const sum = z[0] + z[1] + z[2]; c = z.map(v => v / sum);
+        const p = a.path[i + 1]; if (Math.max(...[0, 1, 2].map(j => Math.abs(p[j] - c[j]))) > 1e-12) bad++;
+      }
     }
+    for (let i = 0; i < rolls.length; i++) for (let x = 1; x < A.length; x++) { pairs++; if (A[x].rolls[i] === A[0].rolls[i]) same++; }
+    if (share === 1 && A.some(a => a.rolls.some((k, i) => k !== rolls[i]))) bad++;
+    const last = a => a.path[a.path.length - 1];
+    const allTrue = A.every(a => last(a)[T] > 0.99);
+    if (s.outcome === 'found') { found++; if (!allTrue) bad++; if (A.some(a => a.ruled === T)) bad++; }
+    else { apart++; if (allTrue) bad++; if (!A.every(a => a.ruled === T || last(a)[T] > 0.99)) bad++; }
+    lens.push(rolls.length);
   }
-  const last = a => a.path[a.path.length - 1];
-  const allTrue = A.every(a => last(a)[T] > 0.99);
-  if (s.outcome === 'found') { found++; if (!allTrue) bad++; if (A.some(a => a.ruled === T)) bad++; }
-  else { apart++; if (allTrue) bad++; if (!A.every(a => a.ruled === T || last(a)[T] > 0.99)) bad++; }
-  lens.push(rolls.length);
+  lens.sort((x, y) => x - y);
+  console.log('simplex share', share, 'runs', N, 'violations', bad, 'found', (found / N).toFixed(3), 'median rolls', lens[N >> 1], '90th', lens[Math.floor(N * 0.9)], 'same roll as ringed agent', (same / pairs).toFixed(3));
 }
-lens.sort((x, y) => x - y);
-console.log('simplex runs', N, 'violations', bad, 'found', (found / N).toFixed(3), 'median rolls', lens[N >> 1], 'max', lens[N - 1]);
 
 // ---- Signals: Roth–Erev learning; a declared signaling system really is one.
 let sys = 0, pool = 0, viol = 0, M = 300, rs = [];
