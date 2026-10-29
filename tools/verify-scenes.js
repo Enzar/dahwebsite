@@ -20,17 +20,19 @@ function bezier(p0){ return p0; }
 `;
 const make = new Function('ctxStub', env + simplexSrc + signalsSrc + 'return { Simplex: Simplex, Signals: Signals };')(ctxStub);
 
-// ---- Simplex: every path is Bayesian conditioning, and the outcome matches its definition.
+// ---- Simplex: every path is Bayesian conditioning on that agent's own rolls, and the outcome matches its definition.
 const LIK = [[0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]];
 let bad = 0, found = 0, apart = 0, N = 3000, lens = [];
 for (let r = 0; r < N; r++) {
   const s = make.Simplex(); s.reset();
   const A = s.agents, rolls = s.rolls, T = s.truth;
+  if (A[0].ruled !== -1 || rolls !== A[0].rolls) bad++; // the ringed agent is open-minded, and the listed rolls are its own
   for (const a of A) {
     let c = a.path[0].slice();
     if (a.ruled >= 0 && c[a.ruled] !== 0) bad++;
-    for (let i = 0; i < rolls.length; i++) {
-      const k = rolls[i]; let z = [0, 1, 2].map(j => c[j] * LIK[j][k]); const sum = z[0] + z[1] + z[2]; c = z.map(v => v / sum);
+    if (a.rolls.length !== rolls.length) bad++;
+    for (let i = 0; i < a.rolls.length; i++) {
+      const k = a.rolls[i]; let z = [0, 1, 2].map(j => c[j] * LIK[j][k]); const sum = z[0] + z[1] + z[2]; c = z.map(v => v / sum);
       const p = a.path[i + 1]; if (Math.max(...[0, 1, 2].map(j => Math.abs(p[j] - c[j]))) > 1e-12) bad++;
     }
   }

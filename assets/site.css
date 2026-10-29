@@ -419,6 +419,9 @@ details.how summary { white-space: nowrap; }
 /* The latest rolls, on one line under each figure. */
 .stage-wrap figcaption .rolls { display: flex; align-items: baseline; gap: 0.7rem; margin: 0 0 0.5rem; }
 .rolls-seq { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; }
+.stage-wrap figcaption .rolls-all { margin: 0.4rem 0 0; }
+.stage-wrap figcaption .rolls-all .rolls { margin: 0 0 0.15rem; }
+.rolls-all .rolls-k { min-width: 0.8rem; }
 /* The die figure carries more than the others, so it gets more height. */
 .stage-wrap--small .stage.stage--definetti-die { aspect-ratio: 1 / 1.1; }
 .body details.related .rv a { font-family: inherit; font-size: inherit; color: var(--red-bright); }

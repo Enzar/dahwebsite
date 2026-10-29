@@ -1,7 +1,7 @@
 // Background scenes for danielherrmann.ca (prototype).
 //
 // Three scenes, each a small honest model of something in the research:
-//   simplex       Merging of opinions in the probability simplex (three hypotheses).
+//   simplex       Inquiry in the probability simplex: three hypotheses, each agent sees its own rolls.
 //   merging       Merging of opinions: agents with different priors, shared evidence.
 //   atomless      Conditioning as an endless zoom into an atomless algebra.
 //   signals       A Lewis signaling game learned by Roth–Erev reinforcement.
@@ -87,19 +87,21 @@ function runStage(canvas, fixed) {
   }
 
   // =====================================================================
-  // Scene. Merging in the simplex.
+  // Scene. Inquiry in the simplex.
   // Three hypotheses about a three-sided die are the corners of a triangle; a point in the
   // triangle is a credence over them. Seven agents start with different priors. Each agent
-  // independently, with probability 0.05, has ruled one hypothesis out in advance: its prior
-  // lies on the edge opposite that corner. Nature picks the true hypothesis at random, and the
-  // agents watch the same rolls and condition on them. Open-minded agents converge on the
-  // true corner. An agent that ruled the truth out can never reach it: conditioning keeps it
-  // on its edge. So the agents come to agree only if every one of them left the truth open,
-  // which is the condition in Blackwell and Dubins's merging theorem. When it holds, the
-  // paths light red. Each roll pulses the corner it favours.
+  // other than the first independently, with probability 0.05, has ruled one hypothesis out in
+  // advance: its prior lies on the edge opposite that corner. Nature picks the true hypothesis
+  // at random. Each agent rolls the same die for itself, so each sees its own evidence, and
+  // conditions on its own rolls. Open-minded agents each converge on the true corner (Bayesian
+  // consistency: finitely many hypotheses that predict differently, and the truth given positive
+  // credence). An agent that ruled the truth out can never reach it: conditioning keeps it on its
+  // edge. So the agents come to agree only if every one of them left the truth open. When they
+  // do, the true corner lights red. The first agent is ringed; its rolls are the strip under the
+  // figure and pulse the corners. Every agent's rolls are listed under How it works.
   // =====================================================================
   function Simplex() {
-    var N = 7, DT = 0.55, MAXOBS = 100000, QDOG = 0.05, SUB = 10; // runs end on agreement, never on a timer (MAXOBS is only a guard): median about 36 rolls
+    var N = 7, DT = 0.45, MAXOBS = 100000, QDOG = 0.05, SUB = 10, REP = 0; // runs end on agreement, never on a timer (MAXOBS is only a guard): median about 67 rolls, 90th percentile about 103
     var LIK = [[0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]]; // each hypothesis: its face half the time, the others a quarter each
     var V, agents, truth, rolls, steps, outcome, t, phase, fade, clock, pulses, flashed, glowT;
     function layout() { // leave room around the triangle for the face symbols
@@ -118,23 +120,26 @@ function runStage(canvas, fixed) {
       agents = [];
       for (var i = 0; i < N; i++) {
         var c = [rand(0.15, 1), rand(0.15, 1), rand(0.15, 1)], ruled = -1;
-        if (Math.random() < QDOG) { ruled = Math.floor(Math.random() * 3); c[ruled] = 0; }
-        agents.push({ path: [norm(c)], ruled: ruled });
+        if (i !== REP && Math.random() < QDOG) { ruled = Math.floor(Math.random() * 3); c[ruled] = 0; } // the ringed agent is always open-minded
+        agents.push({ path: [norm(c)], ruled: ruled, rolls: [] });
       }
-      rolls = []; outcome = null;
+      outcome = null; var n = 0;
       while (!outcome) {
-        var u = Math.random(), k = u < LIK[truth][0] ? 0 : u < LIK[truth][0] + LIK[truth][1] ? 1 : 2;
-        rolls.push(k);
-        agents.forEach(function (a) { var c = a.path[a.path.length - 1]; a.path.push(norm([c[0] * LIK[0][k], c[1] * LIK[1][k], c[2] * LIK[2][k]])); });
+        n++;
+        agents.forEach(function (a) { // each agent rolls the die for itself
+          var u = Math.random(), k = u < LIK[truth][0] ? 0 : u < LIK[truth][0] + LIK[truth][1] ? 1 : 2, c = a.path[a.path.length - 1];
+          a.rolls.push(k); a.path.push(norm([c[0] * LIK[0][k], c[1] * LIK[1][k], c[2] * LIK[2][k]]));
+        });
         var last = function (a) { return a.path[a.path.length - 1]; };
         if (agents.every(function (a) { return last(a)[truth] > 0.99; })) outcome = "found";
-        else if (agents.every(function (a) { return a.ruled === truth || last(a)[truth] > 0.99; }) || rolls.length >= MAXOBS) outcome = "apart";
+        else if (agents.every(function (a) { return a.ruled === truth || last(a)[truth] > 0.99; }) || n >= MAXOBS) outcome = "apart";
       }
-      steps = rolls.length;
+      rolls = agents[REP].rolls; steps = rolls.length;
       agents.forEach(sample);
       t = 0; clock = 0; phase = "enter"; fade = 0; pulses = []; flashed = false; glowT = 0;
-      document.dispatchEvent(new CustomEvent("dh:roll", { detail: { reset: true, stage: "simplex" } }));
+      ["simplex"].concat(agents.map(function (a, i) { return "simplex-" + i; })).forEach(function (st) { document.dispatchEvent(new CustomEvent("dh:roll", { detail: { reset: true, stage: st } })); });
     }
+    function emitAll(j) { emitRoll(rolls[j], "simplex"); agents.forEach(function (a, i) { emitRoll(a.rolls[j], "simplex-" + i); }); }
     // Centripetal Catmull–Rom through the step points: smooth, no loops or overshoot.
     function cr(P, i, f) {
       var p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[Math.min(P.length - 1, i + 1)], p3 = P[Math.min(P.length - 1, i + 2)];
@@ -158,10 +163,10 @@ function runStage(canvas, fixed) {
     function update(dt) {
       t += dt; clock += dt;
       pulses.forEach(function (p) { p.t += dt; }); pulses = pulses.filter(function (p) { return p.t < 0.9; });
-      if (phase === "enter") { fade = smoother(t / 1.2); if (t > 1.4) { phase = "run"; t = 0; pulses.push({ k: rolls[0], t: 0 }); emitRoll(rolls[0], "simplex"); } return; }
+      if (phase === "enter") { fade = smoother(t / 1.2); if (t > 1.4) { phase = "run"; t = 0; pulses.push({ k: rolls[0], t: 0 }); emitAll(0); } return; }
       if (phase === "run") {
         var before = Math.floor((t - dt) / DT), now = Math.floor(t / DT);
-        if (now > before && now < steps) { pulses.push({ k: rolls[now], t: 0 }); emitRoll(rolls[now], "simplex"); } // the roll that starts this step
+        if (now > before && now < steps) { pulses.push({ k: rolls[now], t: 0 }); emitAll(now); } // the rolls that start this step; only the ringed agent's pulse a corner
         if (t >= steps * DT) {
           phase = outcome; t = 0;
           if (outcome === "found" && !flashed) { flashed = true; if (window.DH_FLASH) window.DH_FLASH(V[truth]); }
@@ -186,7 +191,7 @@ function runStage(canvas, fixed) {
         pulses.forEach(function (p) { if (p.k === i) lit = Math.max(lit, 1 - p.t / 0.9); });
         glyph(i, V[i].x + dx / dl * 18, V[i].y + dy / dl * 18, 5.5, ink((0.4 + 0.45 * lit) * Math.max(fade, phase === "enter" ? 0 : 1)));
       }
-      // Each roll: a soft ring at the corner it favours.
+      // Each of the ringed agent's rolls: a soft ring at the corner it favours.
       pulses.forEach(function (p) {
         var k = p.t / 0.9;
         ctx.lineWidth = 1; ctx.strokeStyle = ink(0.4 * (1 - k) * fade);
@@ -209,6 +214,7 @@ function runStage(canvas, fixed) {
         if (total < s * SUB) { ctx.strokeStyle = ink(0.44 * fade); ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(head.x, head.y); ctx.stroke(); }
         glow(head.x, head.y, 10, pal.ink, 0.15 * fade * pal.strength);
         ctx.fillStyle = ink(0.78 * fade); ctx.beginPath(); ctx.arc(head.x, head.y, 2.2, 0, Math.PI * 2); ctx.fill();
+        if (a === agents[REP]) { ctx.strokeStyle = ink(0.7 * fade); ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(head.x, head.y, 5.5, 0, Math.PI * 2); ctx.stroke(); } // the agent whose rolls are listed
       });
       // Agreement on the truth: the true corner turns red. The page-wide wash is the single pulse.
       if (outcome === "found" && (phase === "found" || phase === "dissolve")) {
