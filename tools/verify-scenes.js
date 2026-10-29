@@ -2,7 +2,7 @@
 const fs = require('fs');
 const src = fs.readFileSync(__dirname + '/../assets/background.js', 'utf8');
 function grab(name, next) { const a = src.indexOf('function ' + name + '() {'), b = src.indexOf('function ' + next + '() {'); return src.slice(a, b); }
-let simplexSrc = grab('Simplex', 'Merging').replace('return { reset: reset,', 'return { get agents(){return agents}, get rolls(){return rolls}, get outcome(){return outcome}, get truth(){return truth}, reset: reset,');
+let simplexSrc = grab('Simplex', 'Merging').replace('return { reset: reset,', 'return { get agents(){return agents}, get rolls(){return rolls}, get outcome(){return outcome}, get truth(){return truth}, simulate: simulate, reset: reset,');
 let signalsSrc = grab('Signals', 'Wind').replace('return { reset: reset,', 'return { get S(){return S}, get R(){return R}, get found(){return found}, get phase(){return phase}, get rounds(){return rounds}, success: success, system: system, reset: reset,');
 const ctxStub = new Proxy({}, { get: () => function () { return { addColorStop() {} }; }, set: () => true });
 const env = `
@@ -52,6 +52,24 @@ for (const share of [1, 0]) {
   console.log('simplex share', share, 'runs', N, 'violations', bad, 'found', (found / N).toFixed(3), 'median rolls', lens[N >> 1], '90th', lens[Math.floor(N * 0.9)], 'same roll as ringed agent', (same / pairs).toFixed(3));
 }
 
+
+// ---- Simplex: flipping the switch mid-run keeps every agent's history and conditions correctly after.
+{
+  let bad = 0, N = 1000, LIKs = [[0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]];
+  for (let r = 0; r < N; r++) {
+    make.setShare(r % 2 ? 1 : 0); const s = make.Simplex(); s.reset();
+    const j = Math.floor(Math.random() * Math.min(10, s.rolls.length)), before = s.agents.map(a => ({ path: a.path.slice(0, j + 1), rolls: a.rolls.slice(0, j) }));
+    make.setShare(r % 2 ? 0 : 1); s.simulate(j);
+    s.agents.forEach((a, i) => {
+      for (let q = 0; q <= j; q++) if (a.path[q] !== before[i].path[q]) bad++;
+      for (let q = 0; q < j; q++) if (a.rolls[q] !== before[i].rolls[q]) bad++;
+      let c = a.path[0].slice();
+      for (let q = 0; q < a.rolls.length; q++) { const k = a.rolls[q]; let z = [0, 1, 2].map(m => c[m] * LIKs[m][k]); const sm = z[0] + z[1] + z[2]; c = z.map(w => w / sm); if (Math.max(...[0, 1, 2].map(m => Math.abs(a.path[q + 1][m] - c[m]))) > 1e-12) bad++; }
+    });
+    if (!(r % 2)) { for (let q = j; q < s.rolls.length; q++) if (s.agents.some(a => a.rolls[q] !== s.rolls[q])) bad++; } // switched to shared: identical from step j on
+  }
+  console.log('simplex switch mid-run, runs', N, 'violations', bad);
+}
 // ---- Signals: Roth–Erev learning; a declared signaling system really is one.
 let sys = 0, pool = 0, viol = 0, M = 300, rs = [];
 for (let r = 0; r < M; r++) {

@@ -106,10 +106,13 @@ function runStage(canvas, fixed) {
   function Simplex() {
     var N = 7, DT = 0.55, MAXOBS = 100000, QDOG = 0.05, SUB = 10, REP = 0, share = 1; // runs end on agreement, never on a timer (MAXOBS is only a guard): median about 37 rolls shared, 68 own
     function readShare() { share = root.getAttribute && root.getAttribute("data-ev") === "own" ? 0 : 1; DT = 0.55 - 0.1 * (1 - share); }
-    function restart() { // the switch was flipped: a new run with the new evidence
-      if (share === (root.getAttribute && root.getAttribute("data-ev") === "own" ? 0 : 1)) return;
+    var pending = false;
+    function restart() { // the switch was flipped
+      if (share === (root.getAttribute && root.getAttribute("data-ev") === "own" ? 0 : 1)) { pending = false; return; }
       if (reduceQuery.matches) { start(); return; }
-      if (phase !== "dissolve" && phase !== "gap") { phase = "dissolve"; t = 0; }
+      if (phase === "enter") { simulate(0); return; } // nothing has been rolled yet
+      if (phase === "run") { pending = true; return; } // from the next roll on, the same agents see their evidence the new way
+      if (phase === "found" || phase === "apart") { phase = "dissolve"; t = 0; } // this run is over; start the next one now
     }
     var LIK = [[0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]]; // each hypothesis: its face half the time, the others a quarter each
     var V, agents, truth, rolls, steps, outcome, t, phase, fade, clock, pulses, flashed, glowT;
@@ -121,22 +124,20 @@ function runStage(canvas, fixed) {
     }
     function pt(c) { return { x: c[0] * V[0].x + c[1] * V[1].x + c[2] * V[2].x, y: c[0] * V[0].y + c[1] * V[1].y + c[2] * V[2].y }; }
     function norm(c) { var s = c[0] + c[1] + c[2]; return [c[0] / s, c[1] / s, c[2] / s]; }
-    // The whole run is simulated at the start, so the dots can glide along smooth curves.
-    // The agents still learn one roll at a time; only the drawing looks one roll ahead.
-    function reset() {
-      agents = null; layout(); readShare();
-      truth = Math.floor(Math.random() * 3);
-      agents = [];
-      for (var i = 0; i < N; i++) {
-        var c = [rand(0.15, 1), rand(0.15, 1), rand(0.15, 1)], ruled = -1;
-        if (i !== REP && Math.random() < QDOG) { ruled = Math.floor(Math.random() * 3); c[ruled] = 0; } // the ringed agent is always open-minded
-        agents.push({ path: [norm(c)], ruled: ruled, rolls: [] });
-      }
-      outcome = null; var n = 0;
+    // Simulate the run from step j on, keeping each agent's path and rolls up to step j. A run is
+    // simulated whole at its start (j = 0), so the dots can glide along smooth curves; the agents
+    // still learn one roll at a time, and only the drawing looks one roll ahead. When the switch is
+    // flipped mid-run, the rest of the run is simulated again from the next step with the new
+    // evidence: the same agents and the same die, now seeing their rolls the new way.
+    function simulate(j) {
+      readShare();
+      agents.forEach(function (a) { a.path = a.path.slice(0, j + 1); a.rolls = a.rolls.slice(0, j); });
+      outcome = null; var n = j;
+      var roll = function () { var u = Math.random(); return u < LIK[truth][0] ? 0 : u < LIK[truth][0] + LIK[truth][1] ? 1 : 2; };
       while (!outcome) {
         n++;
-        var roll = function () { var u = Math.random(); return u < LIK[truth][0] ? 0 : u < LIK[truth][0] + LIK[truth][1] ? 1 : 2; }, common = roll();
-        agents.forEach(function (a) { // each agent sees the shared roll with probability share, else rolls for itself
+        var common = roll();
+        agents.forEach(function (a) { // each agent sees the shared roll, or with each its own, rolls for itself
           var k = Math.random() < share ? common : roll(), c = a.path[a.path.length - 1];
           a.rolls.push(k); a.path.push(norm([c[0] * LIK[0][k], c[1] * LIK[1][k], c[2] * LIK[2][k]]));
         });
@@ -146,7 +147,18 @@ function runStage(canvas, fixed) {
       }
       rolls = agents[REP].rolls; steps = rolls.length;
       agents.forEach(sample);
-      t = 0; clock = 0; phase = "enter"; fade = 0; pulses = []; flashed = false; glowT = 0;
+    }
+    function reset() {
+      agents = null; layout(); readShare();
+      truth = Math.floor(Math.random() * 3);
+      agents = [];
+      for (var i = 0; i < N; i++) {
+        var c = [rand(0.15, 1), rand(0.15, 1), rand(0.15, 1)], ruled = -1;
+        if (i !== REP && Math.random() < QDOG) { ruled = Math.floor(Math.random() * 3); c[ruled] = 0; } // the ringed agent is always open-minded
+        agents.push({ path: [norm(c)], ruled: ruled, rolls: [] });
+      }
+      simulate(0);
+      t = 0; clock = 0; phase = "enter"; fade = 0; pulses = []; flashed = false; glowT = 0; pending = false;
       ["simplex"].concat(agents.map(function (a, i) { return "simplex-" + i; })).forEach(function (st) { document.dispatchEvent(new CustomEvent("dh:roll", { detail: { reset: true, stage: st } })); });
     }
     function emitAll(j) { emitRoll(rolls[j], "simplex"); agents.forEach(function (a, i) { emitRoll(a.rolls[j], "simplex-" + i); }); }
@@ -176,6 +188,7 @@ function runStage(canvas, fixed) {
       if (phase === "enter") { fade = smoother(t / 1.2); if (t > 1.4) { phase = "run"; t = 0; pulses.push({ k: rolls[0], t: 0 }); emitAll(0); } return; }
       if (phase === "run") {
         var before = Math.floor((t - dt) / DT), now = Math.floor(t / DT);
+        if (now > before && now < steps && pending) { var dt0 = DT, into = t - now * DT; pending = false; simulate(now); t = now * DT + into * DT / dt0; } // the switch takes effect at this roll, and the pace changes with it
         if (now > before && now < steps) { pulses.push({ k: rolls[now], t: 0 }); emitAll(now); } // the rolls that start this step; only the ringed agent's pulse a corner
         if (t >= steps * DT) {
           phase = outcome; t = 0;
