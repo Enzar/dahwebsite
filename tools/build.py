@@ -46,8 +46,9 @@ def head(title, desc, path=""):
 '''
 
 
-MOTION = '''
-    <button class="theme motion" type="button" data-motion-toggle aria-pressed="false"><span class="theme-word">Pause</span></button>'''
+# Pause / Play for the figures: home page only, outside the header so the nav is identical on every page.
+MOTION = '''<button class="motion" type="button" data-motion-toggle aria-pressed="false"><span class="theme-word">Pause</span></button>
+'''
 
 
 def masthead(current):
@@ -60,7 +61,7 @@ def masthead(current):
 {links}
     <a href="{CV}">CV</a>
     <a class="nav-xp" href="https://exproof.ai/"><span class="exists">∃</span>xProof AI</a>
-    <button class="theme" type="button" data-theme-toggle><span class="theme-word">Night</span></button>{MOTION if current == "index.html" else ""}
+    <button class="theme" type="button" data-theme-toggle><span class="theme-word">Night</span></button>
   </nav>
 </header>
 '''
@@ -497,5 +498,5 @@ for fname, path, title, desc, main in PAGES:
     page = head(title, desc, path)
     if fname == "404.html":  # served for any missing path, so resolve links from the site root
         page = page.replace("<head>\n", '<head>\n<base href="/">\n<meta name="robots" content="noindex">\n', 1)
-    open(fname, "w").write(page + "\n" + masthead(fname) + "\n<main>\n" + main + "</main>\n\n" + FOOT)
+    open(fname, "w").write(page + "\n" + masthead(fname) + "\n" + (MOTION if fname == "index.html" else "") + "<main>\n" + main + "</main>\n\n" + FOOT)
 print("built")
