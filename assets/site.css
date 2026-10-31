@@ -172,6 +172,8 @@ p, ul, ol { max-width: var(--measure); margin: 0 0 1.1rem; }
 .work-title { font-size: 1.16rem; line-height: 1.3; font-weight: 400; font-style: normal; text-wrap: pretty; }
 .work-venue { font-size: 0.98rem; line-height: 1.4; color: var(--fg-2); }
 .work-venue i { color: inherit; }
+.work-authors { font-size: 0.98rem; line-height: 1.4; color: var(--fg-2); }
+.work-authors .me { color: var(--fg); }
 .work-links { display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; font-family: var(--sans); font-size: 0.72rem; letter-spacing: 0.04em; align-items: baseline; }
 details.abs > summary { list-style: none; cursor: pointer; display: inline-flex; gap: 0.45rem; align-items: baseline; font: 500 0.66rem var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-2); }
 details.abs > summary::-webkit-details-marker { display: none; }

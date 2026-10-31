@@ -76,6 +76,28 @@ pub('working','pub-cartesian','2021','Preprint','Cartesian Frames',
 pub('working','pub-measure','','Manuscript','Measure for Measure: Problems with Probability in Decohering Worlds','Available on request.',(),
  "Quantum mechanics is one of our most successful physical theories. One prominent interpretation of quantum mechanics is the Everett interpretation, also called the “Many-Worlds Interpretation.” However, the Everett interpretation gives rise to a puzzle: probability seems to be absent from the theory. This is a problem, because the evidence we have for quantum mechanics is that its probabilistic predictions agree with the statistics of measurement outcomes. David Wallace has argued that we can use decision theory, via a representation theorem, to solve this probability puzzle. I argue that providing a representation theorem in which an agent is representable as maximizing a utility function with respect to what is mathematically a probability function is not sufficient to derive probability in the sense of credence, and thus that this solution to the problem fails.")
 
+# Authors in the order of the paper. Each coauthored entry's "with ..." is turned into a full
+# author line; ME_AT is where Daniel's name falls in that order (0 = first author).
+ME='<span class="me">Daniel A. Herrmann</span>'
+ME_AT={'pub-book':0,'pub-social-sciences':1,'pub-natural-salience':1,'pub-misalignment':0,'pub-deference':0,
+ 'pub-lie-detector':1,'pub-sifting':0,'pub-correlated-conventions':0,'pub-belief-standards':0,
+ 'pub-review-buckner':1,'pub-review-myrvold':0,'pub-causation':0,'pub-transformers':3,'pub-grounding':1,
+ 'pub-benign':1,'pub-counterfactual-content':1,'pub-intrapersonal':1,'pub-cartesian':1}
+NOTES={'pub-misalignment':'Chari, Qian, and Sharvesh were Algoverse fellows.'}
+def _names(s):
+    s=s.replace(' (Algoverse fellows)','')
+    return [n.strip() for n in s.replace(', and ',', ').replace(' and ',', ').split(', ') if n.strip()]
+def _join(xs):
+    return xs[0] if len(xs)==1 else f'{xs[0]} and {xs[1]}' if len(xs)==2 else ', '.join(xs[:-1])+', and '+xs[-1]
+for p in P:
+    v=p['venue']; tail=''
+    if v.endswith(' Available on request.'): v,tail=v[:-len(' Available on request.')].rstrip('.'),'Available on request.'
+    if ', with ' in v: venue,co=v.split(', with ',1)
+    elif v.startswith('With '): venue,co='',v[5:]
+    else: p['authors']=None; continue
+    names=_names(co); names.insert(ME_AT[p['id']],ME)
+    p['authors']=_join(names)
+    p['venue']=' '.join(x for x in [venue+('.' if venue and (tail or p['id'] in NOTES) else ''), tail, NOTES.get(p['id'],'')] if x)
 SECS=[('book','Book'),('articles','Articles'),('reviews','Book reviews'),('under-review','Under review'),('in-progress','In progress')]
 SECKEY={'review':'under-review','working':'in-progress'}
 def item(p):
@@ -91,6 +113,7 @@ def item(p):
         {meta}
         <div class="work-main">
           <h3 class="work-title">{p["title"]}</h3>
+          {f'<p class="work-authors">{p["authors"]}</p>' if p.get("authors") else ''}
           {f'<p class="work-venue">{p["venue"]}</p>' if p["venue"] else ''}
           {linkrow}
         </div>

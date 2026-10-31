@@ -110,7 +110,7 @@ def section(sid, label, body, cls="section"):
 '''
 
 
-CONTACT_LINE = f'<p class="contact-line"><a class="email" data-u="danher" data-d="unc.edu" href="contact.html">danher [at] unc [dot] edu</a><a href="contact.html">Working with me</a><a href="{CV}">CV</a><span class="profiles"><a class="profile" href="https://scholar.google.com/citations?user=dG_cnl0AAAAJ" title="Google Scholar">Scholar</a><a class="profile" href="https://philpeople.org/profiles/daniel-herrmann" title="PhilPeople, the PhilPapers profile">PhilPeople</a><a class="profile" href="https://orcid.org/0000-0001-5322-1921" title="ORCID iD 0000-0001-5322-1921">ORCID</a></span></p>'
+CONTACT_LINE = f'<p class="contact-line"><a class="email" data-u="danher" data-d="unc.edu" href="contact.html">danher [at] unc [dot] edu</a><a href="contact.html">Working with me</a><a href="{CV}">CV</a><span class="profiles"><a class="profile" href="https://scholar.google.com/citations?user=dG_cnl0AAAAJ" title="Google Scholar">Scholar</a><a class="profile" href="https://philpeople.org/profiles/daniel-herrmann" title="PhilPeople, the PhilPapers profile">PhilPeople</a><a class="profile" href="https://orcid.org/0000-0001-5322-1921" title="ORCID iD 0000-0001-5322-1921">ORCID</a><a class="profile" href="https://www.lesswrong.com/users/daniel-herrmann">LessWrong</a></span></p>'
 
 KEATS = open(G + "/keats.html").read()
 
@@ -455,7 +455,7 @@ publications = f'''<section class="hero page-head" aria-labelledby="hero-title">
 contact = f'''<section class="hero page-head" aria-labelledby="hero-title">
   <h1 id="hero-title">Contact</h1>
   <p class="lede">Email is the best way to reach me: <a class="email" data-u="danher" data-d="unc.edu" href="#">danher [at] unc [dot] edu</a>.</p>
-  <p class="profiles profiles--lede"><a class="profile" href="https://scholar.google.com/citations?user=dG_cnl0AAAAJ">Google Scholar</a><a class="profile" href="https://philpeople.org/profiles/daniel-herrmann">PhilPeople</a><a class="profile" href="https://orcid.org/0000-0001-5322-1921">ORCID</a></p>
+  <p class="profiles profiles--lede"><a class="profile" href="https://scholar.google.com/citations?user=dG_cnl0AAAAJ">Google Scholar</a><a class="profile" href="https://philpeople.org/profiles/daniel-herrmann">PhilPeople</a><a class="profile" href="https://orcid.org/0000-0001-5322-1921">ORCID</a><a class="profile" href="https://www.lesswrong.com/users/daniel-herrmann">LessWrong</a></p>
 </section>
 <section class="section section--wide" id="working" aria-labelledby="h-working">
   <h2 class="label" id="h-working">Working with me</h2>
