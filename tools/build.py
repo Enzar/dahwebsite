@@ -158,7 +158,7 @@ TALKS = [
     ('Machine Minds and the Propositional Projection Problem', [
         (True, 'Central APA, Chicago, 2026', None),
     ]),
-    ('Comments on Cappelen and Dever’s <i>Making AI Intelligible</i>', [
+    ('Comments on <a href="https://datascience.hku.hk/professor-cappelen-herman/">Cappelen</a> and <a href="https://eureka.utexas.edu/faculty/joshua-dever">Dever</a>’s <i>Making AI Intelligible</i>', [
         (True, 'Eastern APA, Baltimore, 2026', None),
     ]),
     ('Standards for Belief Representation in LLMs', [
