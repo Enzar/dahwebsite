@@ -46,6 +46,10 @@ def head(title, desc, path=""):
 '''
 
 
+MOTION = '''
+    <button class="theme motion" type="button" data-motion-toggle aria-pressed="false"><span class="theme-word">Pause</span></button>'''
+
+
 def masthead(current):
     items = [("publications.html", "Publications"), ("about.html", "About"), ("contact.html", "Contact")]
     links = "\n".join(
@@ -56,7 +60,7 @@ def masthead(current):
 {links}
     <a href="{CV}">CV</a>
     <a class="nav-xp" href="https://exproof.ai/"><span class="exists">∃</span>xProof AI</a>
-    <button class="theme" type="button" data-theme-toggle><span class="theme-word">Night</span></button>
+    <button class="theme" type="button" data-theme-toggle><span class="theme-word">Night</span></button>{MOTION if current == "index.html" else ""}
   </nav>
 </header>
 '''
@@ -89,8 +93,16 @@ FOOT = f'''<footer class="foot">
 
 
 def section(sid, label, body, cls="section"):
+    if not label:  # an unlabelled section keeps the empty rail, with nothing for a screen reader
+        return f'''<section class="{cls}" id="{sid}">
+  <p class="label"></p>
+  <div class="body">
+{body}
+  </div>
+</section>
+'''
     return f'''<section class="{cls}" id="{sid}" aria-labelledby="h-{sid}">
-  <p class="label" id="h-{sid}">{label}</p>
+  <h2 class="label" id="h-{sid}">{label}</h2>
   <div class="body">
 {body}
   </div>
@@ -104,6 +116,7 @@ KEATS = open(G + "/keats.html").read()
 
 # ---------------------------------------------------------------- Talks
 # Each talk: its title, then one entry per venue: (invited, venue with date, upcoming-until or None).
+# invited is True, False, or "poster". Order follows the CV's presentations list, most recent first.
 # A venue with an upcoming-until date is listed under Upcoming until that date and labelled
 # (upcoming) in the full list; site.js drops both once the date passes.
 TALKS = [
@@ -176,6 +189,67 @@ TALKS = [
         (True, 'Purdue University Philosophy Colloquium, West Lafayette, 2024', None),
         (True, 'AI and Logic Talk, Groningen, 2024', None),
     ]),
+    ('Interpersonal Comparisons of Utility: A Conventional Take', [
+        (False, 'Hannover-Groningen Workshop, Hannover, 2024', None),
+        (False, 'Philosophy of Science Meets Machine Learning, Tübingen, 2023', None),
+    ]),
+    ('Probing the Beliefs of Large Language Models', [
+        (True, 'Philosophy, Sciences, and Humanities Lecture, Groningen, 2023', None),
+    ]),
+    ('From Savage to Jeffrey–Bolker', [
+        (True, 'Agent Foundations Workshop, Oxford, 2023', None),
+    ]),
+    ('Endogenizing Control', [
+        (False, 'Issues in Dynamic Decision Theory Workshop, Konstanz, 2023', None),
+    ]),
+    ('Artificial Agency', [
+        (True, 'Epistemology and Theory of Machine Learning, Munich, 2023', None),
+    ]),
+    ('Attention!', [
+        (True, 'University of Groningen Faculty of Philosophy, Groningen, 2023', None),
+        (True, 'Santa Fe Institute Research Seminar, Santa Fe, 2023', None),
+    ]),
+    ('Deciding as Learning', [
+        (True, 'Seaman Lecture, University of Idaho, Moscow, 2023', None),
+        (True, 'Cambridge Philosophy Faculty, Cambridge, 2022', None),
+    ]),
+    ('Naturalizing Natural Salience', [
+        (False, 'Philosophy of Science Association Biennial, Pittsburgh, 2022', None),
+    ]),
+    ('Measure for Measure', [
+        (True, 'California Quantum Interpretation Network, Chapman University, 2022', None),
+    ]),
+    ('Jeffrey–Bolker Decision Theory and Embedded Agency', [
+        (True, 'Human Aligned AI Summer School, Prague, 2022', None),
+    ]),
+    ('Ramification Functions', [
+        ('poster', 'Formal Epistemology Workshop, Irvine, 2022', None),
+    ]),
+    ('Sifting the Signal from the Noise', [
+        (False, 'ICLR Emergent Communication Workshop, online, 2022', None),
+    ]),
+    ('Rationality for Real Agents', [
+        (False, 'Philosophy of Science Association Biennial, Baltimore, 2021', None),
+    ]),
+    ('Why Randomize, Really?', [
+        (False, 'Randomization Workshop, online, 2021', None),
+    ]),
+    ('The Problem of Self-Knowledge: Walking the Tightrope', [
+        (True, 'Logic Research Seminar, Charles University, online, 2020', None),
+    ]),
+    ('PAC Learning and Occam’s Razor', [
+        (False, 'European Philosophy of Science Association Biennial, Geneva, 2019', None),
+        (True, 'University of Groningen Faculty of Philosophy, Groningen, 2019', None),
+        ('poster', 'Philosophy of Science Association Biennial, Seattle, 2018', None),
+    ]),
+    ('Bars and Belief: The Probability Puzzle Persists', [
+        (False, 'IMBS Luce Graduate Student Conference, Irvine, 2019', None),
+        (False, 'Our Futures Conference, Squamish, 2019', None),
+    ]),
+    ('Inventing Correlated Conventions', [
+        (False, 'Pacific APA, online, 2021', None),
+        (False, 'IMBS Seminar, Irvine, 2019', None),
+    ]),
 ]
 
 # Talk titles that are also entries on the publications page link to them.
@@ -186,6 +260,13 @@ TALK_PUB = {
     "A Decision-Theoretic Approach for Managing Misalignment": "pub-misalignment",
     "Standards for Belief Representation in LLMs": "pub-belief-standards",
     "Deference and Decision": "pub-deference",
+    "Splitting the Atom: Atomless Semantics for Counterfactuals": "pub-counterfactual-content",
+    "Intrapersonal Comparisons under Preference Uncertainty": "pub-intrapersonal",
+    "Naturalizing Natural Salience": "pub-natural-salience",
+    "Measure for Measure": "pub-measure",
+    "Sifting the Signal from the Noise": "pub-sifting",
+    "PAC Learning and Occam’s Razor": "pub-pac",
+    "Inventing Correlated Conventions": "pub-correlated-conventions",
 }
 MONTHS = "January February March April May June July August September October November December".split()
 
@@ -195,7 +276,7 @@ def talk_title(t):
 
 
 def venue_html(inv, v, until):
-    tag = '<span class="inv">Invited</span> ' if inv else ""
+    tag = {True: '<span class="inv">Invited</span> ', "poster": '<span class="inv">Poster</span> '}.get(inv, "")
     up = f' <span class="upcoming" data-until="{until}">(upcoming)</span>' if until else ""
     return tag + v + up
 
@@ -209,8 +290,8 @@ def talks_section():
         up_items.append(f'''      <li class="work talk upcoming" data-until="{until}">
         <div class="work-meta"><span class="year">{when.group(1) if when else ""}</span></div>
         <div class="work-main">
-          <p class="work-title">{talk_title(t)}</p>
-          <p class="work-venue">{('<span class="inv">Invited</span> ' if inv else '') + place}</p>
+          <h3 class="work-title">{talk_title(t)}</h3>
+          <p class="work-venue">{('<span class="inv">Invited</span> ' if inv is True else '') + place}</p>
         </div>
       </li>''')
     all_items = []
@@ -222,7 +303,7 @@ def talks_section():
         all_items.append(f'''      <li class="work talk">
         <div class="work-meta"><span class="year">{yr}</span><span class="type">{n} talk{"s" if n > 1 else ""}</span></div>
         <div class="work-main">
-          <p class="work-title">{talk_title(t)}</p>
+          <h3 class="work-title">{talk_title(t)}</h3>
           <ul class="occasions">
 {venues}
           </ul>
@@ -236,10 +317,10 @@ def talks_section():
     </div>
 ''') if up_items else ""
     return f'''<section class="section" id="talks" aria-labelledby="h-talks">
-  <p class="label" id="h-talks">Talks</p>
+  <h2 class="label" id="h-talks">Talks</h2>
   <div class="body">
 {upcoming}    <h3 class="list-head">All talks</h3>
-    <p class="secondary">Talks since 2024, most recent first.</p>
+    <p class="secondary">Most recent first.</p>
     <ul class="works">
 {chr(10).join(all_items)}
     </ul>
@@ -292,7 +373,7 @@ home = f'''<section class="hero hero--home" aria-labelledby="hero-title">
         </figure>
       </div>
 
-      <details class="related"><summary>Selected work</summary><ul><li><a href="publications.html#pub-book">Radical AI Interpretability</a><span class="rv">Cambridge University Press, forthcoming</span></li><li><a href="publications.html#pub-misalignment">A Decision-Theoretic Approach for Managing Misalignment</a><span class="rv">IASEAI, 2026</span></li><li><a href="publications.html#pub-belief-standards">Standards for Belief Representations in LLMs</a><span class="rv">Minds and Machines, 2025</span></li><li><a href="publications.html#pub-lie-detector">Still No Lie Detector for Language Models</a><span class="rv">Philosophical Studies, 2025</span></li></ul></details>
+      <details class="related" open><summary>Selected work</summary><ul><li><a href="publications.html#pub-book">Radical AI Interpretability</a><span class="rv">Cambridge University Press, forthcoming</span></li><li><a href="publications.html#pub-misalignment">A Decision-Theoretic Approach for Managing Misalignment</a><span class="rv">IASEAI, 2026</span></li><li><a href="publications.html#pub-belief-standards">Standards for Belief Representations in LLMs</a><span class="rv">Minds and Machines, 2025</span></li><li><a href="publications.html#pub-lie-detector">Still No Lie Detector for Language Models</a><span class="rv">Philosophical Studies, 2025</span></li><li><a href="publications.html#pub-cartesian">Cartesian Frames</a><span class="rv">arXiv preprint, 2021</span></li></ul></details>
       <a class="xp-card" href="https://exproof.ai/"><span class="xp-mark"><span class="exists">∃</span>xProof AI</span><span class="xp-line">The research group I co-direct with Aydin Mohseni, searching for a path to safe AI, if one exists.</span><span class="xp-go">exproof.ai →</span></a>
     </div>''', "section section--wide") + section("agency", "", '''    <div class="chance">
       <div class="chance-text">
@@ -312,7 +393,7 @@ home = f'''<section class="hero hero--home" aria-labelledby="hero-title">
         <p class="variant">Show it with: <button type="button" data-variant="df" data-value="die">the die</button><button type="button" data-variant="df" data-value="coin">a coin</button></p>
       </div>
 
-      <details class="related"><summary>Selected work</summary><ul><li><a href="publications.html#pub-deference">Deference and Decision</a><span class="rv">Theory and Decision, 2025</span></li><li><a href="publications.html#pub-causation">A Bayesian Reduction of Causation</a><span class="rv">Under review</span></li><li><a href="publications.html#pub-subnat">Subjective Naturalism and Act Probabilities</a><span class="rv">Under review</span></li></ul></details>
+      <details class="related" open><summary>Selected work</summary><ul><li><a href="publications.html#pub-deference">Deference and Decision</a><span class="rv">Theory and Decision, 2025</span></li><li><a href="publications.html#pub-causation">A Bayesian Reduction of Causation</a><span class="rv">Under review</span></li><li><a href="publications.html#pub-subnat">Subjective Naturalism and Act Probabilities</a><span class="rv">Under review</span></li></ul></details>
     </div>''', "section section--wide") + section("philsci", "", f'''    <div class="chance">
       <div class="chance-text">
         <h2>Formal philosophy of science</h2>
@@ -330,7 +411,7 @@ home = f'''<section class="hero hero--home" aria-labelledby="hero-title">
         </figure>
         <p class="variant">Show it with: <button type="button" data-variant="sg" data-value="lewis">the Lewis–Skyrms game</button><button type="button" data-variant="sg" data-value="sift">sifting</button></p>
       </div>
-      <details class="related"><summary>Selected work</summary><ul><li><a href="publications.html#pub-natural-salience">Naturalizing Natural Salience</a><span class="rv">British Journal for the Philosophy of Science, 2026</span></li><li><a href="publications.html#pub-sifting">Sifting the Signal from the Noise</a><span class="rv">British Journal for the Philosophy of Science, 2025</span></li><li><a href="publications.html#pub-correlated-conventions">Invention and Evolution of Correlated Conventions</a><span class="rv">British Journal for the Philosophy of Science, 2025</span></li><li><a href="publications.html#pub-social-sciences">Why Are the Social Sciences Hard? Two New Hypotheses</a><span class="rv">Studies in History and Philosophy of Science, 2026</span></li><li><a href="publications.html#pub-pac">PAC Learning and Occam’s Razor: Probably Approximately Incorrect</a><span class="rv">Philosophy of Science, 2020</span></li><li><a href="publications.html#pub-benign">Benign Interpolation and Occam’s Razor</a><span class="rv">Under review</span></li></ul></details>
+      <details class="related" open><summary>Selected work</summary><ul><li><a href="publications.html#pub-natural-salience">Naturalizing Natural Salience</a><span class="rv">British Journal for the Philosophy of Science, 2026</span></li><li><a href="publications.html#pub-sifting">Sifting the Signal from the Noise</a><span class="rv">British Journal for the Philosophy of Science, 2025</span></li><li><a href="publications.html#pub-correlated-conventions">Invention and Evolution of Correlated Conventions</a><span class="rv">British Journal for the Philosophy of Science, 2025</span></li><li><a href="publications.html#pub-social-sciences">Why Are the Social Sciences Hard? Two New Hypotheses</a><span class="rv">Studies in History and Philosophy of Science, 2026</span></li><li><a href="publications.html#pub-pac">PAC Learning and Occam’s Razor: Probably Approximately Incorrect</a><span class="rv">Philosophy of Science, 2020</span></li><li><a href="publications.html#pub-benign">Benign Interpolation and Occam’s Razor</a><span class="rv">Under review</span></li></ul></details>
     </div>''', "section section--wide") + HOME_TALKS + KEATS + section("contact", "Contact", "    " + CONTACT_LINE)
 
 # ---------------------------------------------------------------- About (the current site's bio, verbatim)
@@ -352,7 +433,7 @@ def contents_line(pubs, talks):
     """Section links with counts, computed from the HTML so they cannot go stale.
     A talk given at several venues counts once per venue."""
     out = []
-    for sid, label, body in re.findall(r'<section class="section" id="([^"]+)".*?<p class="label"[^>]*>(.*?)</p>(.*?)</section>', pubs, flags=re.S):
+    for sid, label, body in re.findall(r'<section class="section" id="([^"]+)".*?<h2 class="label"[^>]*>(.*?)</h2>(.*?)</section>', pubs, flags=re.S):
         n = body.count('<li class="work"')
         out.append(f'<span><a href="#{sid}">{label}</a> ({n})</span>')
     out.append(f'<span><a href="#talks">Talks</a> ({talks})</span>')
@@ -377,7 +458,7 @@ contact = f'''<section class="hero page-head" aria-labelledby="hero-title">
   <p class="profiles profiles--lede"><a class="profile" href="https://scholar.google.com/citations?user=dG_cnl0AAAAJ">Google Scholar</a><a class="profile" href="https://philpeople.org/profiles/daniel-herrmann">PhilPeople</a><a class="profile" href="https://orcid.org/0000-0001-5322-1921">ORCID</a></p>
 </section>
 <section class="section section--wide" id="working" aria-labelledby="h-working">
-  <p class="label" id="h-working">Working with me</p>
+  <h2 class="label" id="h-working">Working with me</h2>
   <div class="body">
     <div class="pair">
       <div class="col">
@@ -392,7 +473,7 @@ contact = f'''<section class="hero page-head" aria-labelledby="hero-title">
   </div>
 </section>
 <section class="section" id="mentoring" aria-labelledby="h-mentoring">
-  <p class="label" id="h-mentoring">Mentoring</p>
+  <h2 class="label" id="h-mentoring">Mentoring</h2>
   <div class="body">
     <p>Outside UNC I mentor AI safety researchers through the <a href="https://princint.ai/programs/fellowship/">PIBBSS</a>, <a href="https://www.iliad.ac/fellowship">Iliad</a>, and <a href="https://algoverseairesearch.org/">Algoverse</a> fellowships. With {AYDIN} I also co-direct {EXPROOF}; its site describes how to <a href="https://exproof.ai/work-with-us.html">work with the group</a>.</p>
   </div>

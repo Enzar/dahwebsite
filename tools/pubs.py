@@ -18,7 +18,7 @@ pub('articles','pub-natural-salience','2026','Article','Naturalizing Natural Sal
  f'<a href="https://www.journals.uchicago.edu/doi/10.1086/725654"><i>British Journal for the Philosophy of Science</i></a>, with {JACK}',[('Free version','https://philsci-archive.pitt.edu/22098/')],
  "Grice, Lewis, and Skyrms proposed similar distinctions between kinds of meaning. The meaning of terms in human language, as Lewis and Skyrms had it, is “conventional.” Skyrms presented models showing how it is possible for conventional meaning to evolve in a population without reliance on pre-existing meaning. But one might think of conventionality as coming in degrees, based on whether the evolutionary process begins with “natural saliences.” We propose a theory of natural salience and several extensions of Skyrms’s models to capture this notion. These models reveal that natural saliences can hinder, as well as help, the evolution of language.")
 pub('articles','pub-misalignment','2026','Proceedings','A Decision-Theoretic Approach for Managing Misalignment',
- f'<a href="https://ojs.aaai.org/index.php/IASEAI/article/view/43026"><i>Proceedings of the Second Conference of the International Association for Safe and Ethical Artificial Intelligence</i></a>, with <a href="https://www.linkedin.com/in/abinav-chari1">Abinav Chari</a>, <a href="https://www.linkedin.com/in/isabelle-athena-qian">Isabelle Qian</a>, <a href="https://www.sreesharvesh.com/">Sree Sharvesh</a>, and {BEN}',
+ f'<a href="https://ojs.aaai.org/index.php/IASEAI/article/view/43026"><i>Proceedings of the Second Conference of the International Association for Safe and Ethical Artificial Intelligence</i></a>, with <a href="https://www.linkedin.com/in/abinav-chari1">Abinav Chari</a>, <a href="https://www.linkedin.com/in/isabelle-athena-qian">Isabelle Qian</a>, <a href="https://www.sreesharvesh.com/">Sree Sharvesh</a> (Algoverse fellows), and {BEN}',
  [('arXiv','https://arxiv.org/abs/2512.15584')],
  "When should we delegate decisions to AI systems? While the value alignment literature has developed techniques for shaping AI values, less attention has been paid to how to determine, under uncertainty, when imperfect alignment is good enough to justify delegation. We argue that rational delegation requires balancing an agent’s value (mis)alignment with its epistemic accuracy and its reach (the acts it has available). This paper introduces a formal, decision-theoretic framework to analyze this tradeoff precisely accounting for a principal’s uncertainty about these factors. Our analysis reveals a sharp distinction between two delegation scenarios. First, universal delegation (trusting an agent with any problem) demands near-perfect value alignment and total epistemic trust, conditions rarely met in practice. Second, we show that context-specific delegation can be optimal even with significant misalignment. An agent’s superior accuracy or expanded reach may grant access to better overall decision problems, making delegation rational in expectation. We develop a novel scoring framework to quantify this ex ante decision. Ultimately, our work provides a principled method for determining when an AI is aligned enough for a given context, shifting the focus from achieving perfect alignment to managing the risks and rewards of delegation under uncertainty.")
 pub('articles','pub-deference','2025','Article','Deference and Decision',
@@ -27,7 +27,7 @@ pub('articles','pub-deference','2025','Article','Deference and Decision',
  "Consider two principles of rational decision making. One says that you should never use the value of events that are inconsistent with your evidence to assess what to do. The other says that, if you know what a more informed version of yourself would do, then you should already do likewise with your current information. We show that no decision theory which agrees with evidential decision theory (EDT) and causal decision theory (CDT) whenever they agree can satisfy both principles. In particular, assuming that agents update via Bayesian conditioning, EDT satisfies the former and violates the latter, while CDT violates the former and satisfies the latter. We show that the causalist can satisfy the first (at the cost of then violating the second) if she either uses a learning rule that changes her beliefs about counterfactuals in a particular way or uses a decision rule more in line with a rule proposed by Hitchcock (2016). We then employ these results to illuminate a core tension at the heart of the debate between evidentialists and causalists.")
 pub('articles','pub-lie-detector','2025','Article','Still No Lie Detector for Language Models: Probing Empirical and Conceptual Roadblocks',
  f'<a href="https://doi.org/10.1007/s11098-023-02094-3"><i>Philosophical Studies</i></a>, with {BEN}',
- [('Free link','https://link.springer.com/epdf/10.1007/s11098-023-02094-3?sharing_token=SQMI6yIG-Y3_64NhDmPODPe4RwlQNchNByi7wbcMAY4V8cw3OTXTDNDj1o4J90P-1orE5NH7T79Dpp9kZfaa9-j_1GbmsAUVUqokbkR7Q9PTKBra4xq8wm8FZKqZl3dix_ZotmX5xKFy1OlLO3EqktXy-y4pCHPcdIh2Z6wU9Yk%3D')],
+ [('arXiv','https://arxiv.org/abs/2307.00175'),('Free link','https://link.springer.com/epdf/10.1007/s11098-023-02094-3?sharing_token=SQMI6yIG-Y3_64NhDmPODPe4RwlQNchNByi7wbcMAY4V8cw3OTXTDNDj1o4J90P-1orE5NH7T79Dpp9kZfaa9-j_1GbmsAUVUqokbkR7Q9PTKBra4xq8wm8FZKqZl3dix_ZotmX5xKFy1OlLO3EqktXy-y4pCHPcdIh2Z6wU9Yk%3D')],
  "We consider the questions of whether or not large language models (LLMs) have beliefs, and, if they do, how we might measure them. First, we consider whether or not we should expect LLMs to have something like beliefs in the first place. We consider some recent arguments aiming to show that LLMs cannot have beliefs. We show that these arguments are misguided. We provide a more productive framing of questions surrounding the status of beliefs in LLMs, and highlight the empirical nature of the problem. With this lesson in hand, we evaluate two existing approaches for measuring the beliefs of LLMs, one due to Azaria and Mitchell (2023) and the other to Burns et al. (2022). Moving from the armchair to the desk chair, we provide empirical results that show that these methods fail to generalize in very basic ways. We then argue that, even if LLMs have beliefs, these methods are unlikely to be successful for conceptual reasons. Thus, there is still no lie-detector for LLMs. We conclude by suggesting some concrete paths for future work.")
 pub('articles','pub-sifting','2025','Article','Sifting the Signal from the Noise',
  f'<a href="https://doi.org/10.1086/720805"><i>British Journal for the Philosophy of Science</i></a>, with {JACK}',[('Free version','https://philsci-archive.pitt.edu/20617/')],
@@ -65,6 +65,10 @@ pub('review','pub-benign','','Under review','Benign Interpolation and Occam’s 
  'With <a href="https://tomster.userweb.mwn.de/">Tom F. Sterkenburg</a> and <a href="https://romeijn.web.rug.nl/">Jan-Willem Romeijn</a>',
  [('arXiv','https://arxiv.org/abs/2608.03386')],
  "Contemporary deep learning methods generalize well even when they fit their training data perfectly, a phenomenon known as benign interpolation. This phenomenon cannot be accounted for by classical statistical learning theory and has prompted a range of attempted new explanations in the statistics and machine learning literature. A common feature of these new proposals is an appeal to a simplicity preference among interpolating models, often presented as a form of Occam’s razor. We clarify this debate for a philosophical audience and argue that this new appeal to simplicity creates an explanatory gap. The classical theory offers theorems which connect the simplicity of model classes to good generalization, thus underwriting methodological simplicity norms. The new accounts instead appeal to properties of individual models, which they interpret as a kind of simplicity. Lacking a provable connection to generalization, it is the name “simplicity” that does the work a theorem used to do, making a substantive and unargued assumption look like the application of a familiar methodological principle.")
+pub('working','pub-end-of-deliberation','','In progress','The End of Deliberation','')
+pub('working','pub-decision-under-certainty','','In progress','Decision Under Certainty','')
+pub('working','pub-counterfactual-content','','In progress','Completing Counterfactual Content','With <a href="https://gerardrothfus.com/">Gerard Rothfus</a>')
+pub('working','pub-intrapersonal','','In progress','Intrapersonal Comparisons under Preference Uncertainty','With Pietro Cibinel')
 pub('working','pub-cartesian','2021','Preprint','Cartesian Frames',
  'With <a href="http://scott.garrabrant.com/">Scott Garrabrant</a> and <a href="https://josiahlopezwild.com">Josiah Lopez-Wild</a>',
  [('arXiv','https://arxiv.org/abs/2109.10996')],
@@ -72,11 +76,11 @@ pub('working','pub-cartesian','2021','Preprint','Cartesian Frames',
 pub('working','pub-measure','','Manuscript','Measure for Measure: Problems with Probability in Decohering Worlds','Available on request.',(),
  "Quantum mechanics is one of our most successful physical theories. One prominent interpretation of quantum mechanics is the Everett interpretation, also called the “Many-Worlds Interpretation.” However, the Everett interpretation gives rise to a puzzle: probability seems to be absent from the theory. This is a problem, because the evidence we have for quantum mechanics is that its probabilistic predictions agree with the statistics of measurement outcomes. David Wallace has argued that we can use decision theory, via a representation theorem, to solve this probability puzzle. I argue that providing a representation theorem in which an agent is representable as maximizing a utility function with respect to what is mathematically a probability function is not sufficient to derive probability in the sense of credence, and thus that this solution to the problem fails.")
 
-SECS=[('book','Book'),('articles','Articles'),('reviews','Book reviews'),('under-review','Under review'),('working-papers','Working papers')]
-SECKEY={'review':'under-review','working':'working-papers'}
+SECS=[('book','Book'),('articles','Articles'),('reviews','Book reviews'),('under-review','Under review'),('in-progress','In progress')]
+SECKEY={'review':'under-review','working':'in-progress'}
 def item(p):
-    # Under review is said by the section; a different status there (e.g. Revise and resubmit) still shows.
-    typ=f'<span class="type">{p["typ"]}</span>' if (p['sec']=='working' or (p['sec']=='review' and p['typ']!='Under review')) else ''
+    # Under review and In progress are said by the section; a different status there (e.g. Revise and resubmit) still shows.
+    typ=f'<span class="type">{p["typ"]}</span>' if ((p['sec']=='working' and p['typ']!='In progress') or (p['sec']=='review' and p['typ']!='Under review')) else ''
     yr=f'<span class="year">{p["year"]}</span>' if (p['year'] and p['sec']!='review') else ''  # no year while under review
     meta=f'<div class="work-meta">{yr}{typ}</div>'
     links=''.join(f'<a href="{u.replace("&","&amp;") if "&amp;" not in u else u}">{l}</a>' for l,u in p['links'])
@@ -86,8 +90,8 @@ def item(p):
     return f'''      <li class="work" id="{p["id"]}">
         {meta}
         <div class="work-main">
-          <p class="work-title">{p["title"]}</p>
-          <p class="work-venue">{p["venue"]}</p>
+          <h3 class="work-title">{p["title"]}</h3>
+          {f'<p class="work-venue">{p["venue"]}</p>' if p["venue"] else ''}
           {linkrow}
         </div>
       </li>'''
@@ -95,7 +99,7 @@ out=[]
 for key,label in SECS:
     items=[p for p in P if SECKEY.get(p['sec'],p['sec'])==key]
     out.append(f'''<section class="section" id="{key}" aria-labelledby="h-{key}">
-  <p class="label" id="h-{key}">{label}</p>
+  <h2 class="label" id="h-{key}">{label}</h2>
   <div class="body">
     <ul class="works">
 {chr(10).join(item(p) for p in items)}

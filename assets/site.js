@@ -82,7 +82,7 @@ document.querySelectorAll(".photo img").forEach(function (img) {
   var root = document.documentElement, P = window.DH_PREFS || { set: function () {} };
   var b = document.querySelector("[data-theme-toggle]"); if (!b) return;
   function themeColor() { var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", root.getAttribute("data-palette") === "night" ? "#070707" : "#fafafa"); }
-  function label() { var night = root.getAttribute("data-palette") === "night"; b.querySelector(".theme-word").textContent = night ? "Paper" : "Night"; b.setAttribute("aria-label", night ? "Switch to the light palette" : "Switch to the dark palette"); }
+  function label() { var night = root.getAttribute("data-palette") === "night"; b.querySelector(".theme-word").textContent = night ? "Paper" : "Night"; }
   b.addEventListener("click", function () {
     var v = root.getAttribute("data-palette") === "night" ? "paper" : "night";
     root.setAttribute("data-palette", v); P.set("palette", v); label();
@@ -90,6 +90,22 @@ document.querySelectorAll(".photo img").forEach(function (img) {
     document.dispatchEvent(new CustomEvent("dh:prefs"));
   });
   label(); themeColor();
+})();
+
+// Pause or play the figures. Shown only on pages with figures, and not when the system already asks for reduced motion.
+(function () {
+  var root = document.documentElement, P = window.DH_PREFS || { set: function () {} };
+  var b = document.querySelector("[data-motion-toggle]"); if (!b) return;
+  if (P.systemStill || !document.querySelector("canvas")) { b.hidden = true; return; }
+  function moving() { return !root.getAttribute("data-motion"); }
+  function label() { b.querySelector(".theme-word").textContent = moving() ? "Pause" : "Play"; b.setAttribute("aria-pressed", moving() ? "false" : "true"); }
+  b.addEventListener("click", function () {
+    if (moving()) { root.setAttribute("data-motion", "paused"); P.set("motion", "still"); }
+    else if (root.getAttribute("data-motion") === "paused") { root.removeAttribute("data-motion"); P.set("motion", "move"); if (P.resume) P.resume(); }
+    else { P.set("motion", "move"); location.reload(); return; } // opened still: the figures start from the top
+    label();
+  });
+  label();
 })();
 
 // Email addresses are assembled here, so the page source never holds them whole.

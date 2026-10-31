@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /tools/
+
+Sitemap: https://www.danielherrmann.ca/sitemap.xml
