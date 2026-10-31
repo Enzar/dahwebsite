@@ -415,6 +415,20 @@ home = f'''<section class="hero hero--home" aria-labelledby="hero-title">
       <details class="related" open><summary>Selected work</summary><ul><li><a href="publications.html#pub-natural-salience">Naturalizing Natural Salience</a><span class="rv">British Journal for the Philosophy of Science, 2026</span></li><li><a href="publications.html#pub-sifting">Sifting the Signal from the Noise</a><span class="rv">British Journal for the Philosophy of Science, 2025</span></li><li><a href="publications.html#pub-correlated-conventions">Invention and Evolution of Correlated Conventions</a><span class="rv">British Journal for the Philosophy of Science, 2025</span></li><li><a href="publications.html#pub-social-sciences">Why Are the Social Sciences Hard? Two New Hypotheses</a><span class="rv">Studies in History and Philosophy of Science, 2026</span></li><li><a href="publications.html#pub-pac">PAC Learning and Occam’s Razor: Probably Approximately Incorrect</a><span class="rv">Philosophy of Science, 2020</span></li><li><a href="publications.html#pub-benign">Benign Interpolation and Occam’s Razor</a><span class="rv">Under review</span></li></ul></details>
     </div>''', "section section--wide") + HOME_TALKS + KEATS + section("contact", "Contact", "    " + CONTACT_LINE)
 
+# Selected work on the home page names the coauthors ("With ..."); the publications page has the
+# full author list in order. Coauthors are read from the built publications list.
+def _coauthors(pubs_html):
+    out = {}
+    for pid, body in re.findall(r'<li class="work" id="(pub-[^"]+)">(.*?)</li>', pubs_html, flags=re.S):
+        m = re.search(r'<p class="work-authors">(.*?)</p>', body, flags=re.S)
+        if not m: continue
+        names = [n.strip() for n in re.split(r',\s*(?:and\s+)?|\s+and\s+', m.group(1)) if n.strip() and 'class="me"' not in n]
+        out[pid] = names[0] if len(names) == 1 else (f"{names[0]} and {names[1]}" if len(names) == 2 else ", ".join(names[:-1]) + ", and " + names[-1])
+    return out
+_CO = _coauthors(open(G + "/pubs.html").read())
+home = re.sub(r'(<li><a href="publications\.html#(pub-[^"]+)">[^<]*</a><span class="rv">)',
+              lambda m: m.group(1) + (f"With {_CO[m.group(2)]} · " if m.group(2) in _CO else ""), home)
+
 # ---------------------------------------------------------------- About (the current site's bio, verbatim)
 bio = open(G + "/home-main.html").read()
 sections = re.findall(r'<section class="section" id="(research|teaching|writing|previously)".*?</section>', bio, flags=re.S)
