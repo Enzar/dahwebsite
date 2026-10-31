@@ -114,6 +114,9 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px soli
 .page-head .contents span { white-space: nowrap; }
 .page-head .contents a { color: var(--fg); }
 .page-head .contents a:hover { color: var(--red-hover); }
+.page-head .access { margin: 0.3rem 0 0; max-width: none; font-family: var(--sans); font-size: 0.8rem; letter-spacing: 0.02em; line-height: 1.8; color: var(--fg-2); }
+.page-head .access a { color: var(--fg); }
+.page-head .access a:hover { color: var(--red-hover); }
 
 .eyebrow, .label { font-family: var(--sans); font-size: 0.68rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-2); line-height: 1.5; margin: 0; }
 

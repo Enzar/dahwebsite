@@ -443,7 +443,8 @@ def contents_line(pubs, talks):
 
 publications = f'''<section class="hero page-head" aria-labelledby="hero-title">
   <h1 id="hero-title">Publications and talks</h1>
-{contents_line(pubs, TALK_COUNT)}
+{contents_line(pubs, TALK_COUNT)}  <p class="access">Can’t get hold of a paper? Write to <a class="email" data-u="danher" data-d="unc.edu" href="contact.html">danher [at] unc [dot] edu</a> and I’ll send it.</p>
+
   <div class="epigraph">
     <p class="poem">Drive my dead thoughts over the universe<br>Like wither’d leaves to quicken a new birth!</p>
     <p class="attrib">— Percy Bysshe Shelley, <a href="https://www.poetryfoundation.org/poems/45134/ode-to-the-west-wind">Ode to the West Wind</a></p>
