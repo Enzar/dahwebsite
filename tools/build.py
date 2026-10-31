@@ -33,6 +33,7 @@ def head(title, desc, path=""):
 <meta property="og:image:alt" content="Daniel A. Herrmann: decision theorist, formal epistemologist, and philosopher of science and of AI. Beside his name, seven agents’ credences converge on the true hypothesis.">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -340,9 +341,23 @@ about = f'''<section class="hero page-head" aria-labelledby="hero-title">
 
 # ---------------------------------------------------------------- Publications
 pubs = open(G + "/pubs.html").read()
+
+
+def contents_line(pubs, talks):
+    """Section links with counts, computed from the HTML so they cannot go stale.
+    A talk given at several venues counts once per venue (they are joined by '; ')."""
+    out = []
+    for sid, label, body in re.findall(r'<section class="section" id="([^"]+)".*?<p class="label"[^>]*>(.*?)</p>(.*?)</section>', pubs, flags=re.S):
+        n = body.count('<li class="work"')
+        out.append(f'<span><a href="#{sid}">{label}</a> ({n})</span>')
+    venues = re.findall(r'<li class="work talk">.*?<p class="work-venue">(.*?)</p>', talks, flags=re.S)
+    out.append(f'<span><a href="#talks">Talks</a> ({sum(v.count("; ") + 1 for v in venues)})</span>')
+    return '  <p class="contents">' + " · ".join(out) + "</p>\n"
+
+
 publications = f'''<section class="hero page-head" aria-labelledby="hero-title">
   <h1 id="hero-title">Publications and talks</h1>
-  <div class="epigraph">
+{contents_line(pubs, TALKS_SECTION)}  <div class="epigraph">
     <p class="poem">Drive my dead thoughts over the universe<br>Like wither’d leaves to quicken a new birth!</p>
     <p class="attrib">— Percy Bysshe Shelley, <a href="https://www.poetryfoundation.org/poems/45134/ode-to-the-west-wind">Ode to the West Wind</a></p>
   </div>

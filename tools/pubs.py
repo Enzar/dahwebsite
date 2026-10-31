@@ -49,29 +49,31 @@ pub('reviews','pub-review-buckner','2025','Review','Review of Cameron J. Buckner
 pub('reviews','pub-review-myrvold','2022','Review','Review of Wayne C. Myrvold’s <i>Beyond Chance and Credence</i>',
  '<a href="https://academic.oup.com/philmat/article-abstract/30/2/273/6554573"><i>Philosophia Mathematica</i></a>, with <a href="https://www.davidpeterwallisfreeborn.com/">David Peter Wallis Freeborn</a>',
  [('Free link','https://academic.oup.com/philmat/advance-article/doi/10.1093/philmat/nkac006/6554573?guestAccessKey=be69ceb8-26ba-47c8-a05b-1be9d51e9637')])
-pub('progress','pub-subnat','','Under review','Subjective Naturalism and Act Probabilities','Available on request.',(),
+pub('review','pub-subnat','','Under review','Subjective Naturalism and Act Probabilities','Available on request.',(),
  "Can an agent assign probabilities to her own acts while she deliberates? This question splits decision theorists into two broad camps: those who believe deliberation crowds out prediction, and those who believe that deliberation welcomes prediction. I argue that philosophers are divided because they respond in different ways to a threat posed to agency for a certain kind of naturalized agent. I introduce two conditions that capture this kind of subjective naturalism: richness and austerity. I show that taking these two conditions poses a dilemma, and that both camps respond to the dilemma by violating one of these conditions. I provide a novel account of agency, called desirability tracking, which allows us to avoid the violations of richness that the crowding out camp commits, while also avoiding the violations of austerity that the welcoming camp commits. The account also allows us to extract the decision problems an agent takes herself to face from her own attitudes, as opposed to imposing them from the outside.")
-pub('progress','pub-causation','2026','Under review','A Bayesian Reduction of Causation',
+pub('review','pub-causation','2026','Under review','A Bayesian Reduction of Causation',
  f'With {AYDIN}, {BEN}, and {BRUCE}',
  [('Preprint','https://aydinmohseni.com/wp-content/uploads/2026/03/A_Bayesian_Reduction_of_Causation.pdf')],
  "De Finetti conjectured that causation, like chance, reduces to patterns in subjective probability. Recent results on the Pearl Causal Hierarchy seem to foreclose this possibility, proving that causal claims are irreducible to probabilistic ones within structural causal models (SCMs). We show that the reduction succeeds after all. The apparent irreducibility arises from an implicit restriction on the agent’s representational resources: once the variable set is enriched to include naturalized intervention variables, interventional propositions reduce to ordinary probabilistic conditioning. To complete the subjectivist picture, we prove a de Finetti-style representation theorem establishing that an agent with exchangeable credences can be represented as simultaneously learning causal structure and the probabilities within that structure via standard Bayesian updating. We then show how this framework bears on the debate between evidential and causal decision theory, arguing that causal decision theory functions as a useful approximation of evidential reasoning over the full algebra. Within SCMs, causal reasoning reduces to subjective probability.")
-pub('progress','pub-grounding','','Under review','Grounding Human-Machine Decision-Making',
+pub('review','pub-grounding','','Under review','Grounding Human-Machine Decision-Making',
  'With <a href="https://sites.google.com/view/thomas-grote/startseite">Thomas Grote</a> and <a href="https://www.cvernade.com/">Claire Vernade</a>. Available on request.',(),
  "Machine learning systems now participate in many high-stakes decisions alongside human experts, yet the conceptual terrain remains fragmented. Inconsistent terminology and underspecified frameworks hinder study design and obscure when findings transfer across research contexts. We develop a unified decision-theoretic framework capturing four types of human-machine decision-making: human-in-the-loop (ML systems decide while humans monitor), decision-aid (humans decide with ML predictions), complementarity (division of labor by respective strengths), and collective decision-making (independent judgments combined by aggregation). Grounding these types in common formal apparatus reveals structural similarities often missed when studied in isolation, and predicts which failure modes can arise in each type. The framework connects the decision-aid literature to results from formal epistemology that characterize exactly when deference to a machine is rational, and it identifies two intervention points: modifying what information the machine communicates versus how humans respond. We extend these foundations to sequential settings where both parties learn over time, and discuss applications to attributing responsibility for erroneous decisions in human-machine systems.")
-pub('progress','pub-benign','','Under review','Benign Interpolation and Occam’s Razor',
+pub('review','pub-benign','','Under review','Benign Interpolation and Occam’s Razor',
  'With <a href="https://tomster.userweb.mwn.de/">Tom F. Sterkenburg</a> and <a href="https://romeijn.web.rug.nl/">Jan-Willem Romeijn</a>',
  [('arXiv','https://arxiv.org/abs/2608.03386')],
  "Contemporary deep learning methods generalize well even when they fit their training data perfectly, a phenomenon known as benign interpolation. This phenomenon cannot be accounted for by classical statistical learning theory and has prompted a range of attempted new explanations in the statistics and machine learning literature. A common feature of these new proposals is an appeal to a simplicity preference among interpolating models, often presented as a form of Occam’s razor. We clarify this debate for a philosophical audience and argue that this new appeal to simplicity creates an explanatory gap. The classical theory offers theorems which connect the simplicity of model classes to good generalization, thus underwriting methodological simplicity norms. The new accounts instead appeal to properties of individual models, which they interpret as a kind of simplicity. Lacking a provable connection to generalization, it is the name “simplicity” that does the work a theorem used to do, making a substantive and unargued assumption look like the application of a familiar methodological principle.")
-pub('progress','pub-cartesian','2021','Preprint','Cartesian Frames',
+pub('working','pub-cartesian','2021','Preprint','Cartesian Frames',
  'With <a href="http://scott.garrabrant.com/">Scott Garrabrant</a> and <a href="https://josiahlopezwild.com">Josiah Lopez-Wild</a>',
  [('arXiv','https://arxiv.org/abs/2109.10996')],
  "We introduce a novel framework, the theory of Cartesian frames (CF), that gives powerful tools for manipulating sets of acts. The CF framework takes as its most fundamental building block that an agent can freely choose from a set of available actions. The framework uses the mathematics of Chu spaces to develop a calculus of those sets of actions, how those actions change at various levels of description, and how different agents’ actions can combine when agents work in concert. We discuss how this framework might provide an illuminating perspective on issues in decision theory and formal epistemology.")
-pub('progress','pub-measure','','Manuscript','Measure for Measure: Problems with Probability in Decohering Worlds','Available on request.',(),
+pub('working','pub-measure','','Manuscript','Measure for Measure: Problems with Probability in Decohering Worlds','Available on request.',(),
  "Quantum mechanics is one of our most successful physical theories. One prominent interpretation of quantum mechanics is the Everett interpretation, also called the “Many-Worlds Interpretation.” However, the Everett interpretation gives rise to a puzzle: probability seems to be absent from the theory. This is a problem, because the evidence we have for quantum mechanics is that its probabilistic predictions agree with the statistics of measurement outcomes. David Wallace has argued that we can use decision theory, via a representation theorem, to solve this probability puzzle. I argue that providing a representation theorem in which an agent is representable as maximizing a utility function with respect to what is mathematically a probability function is not sufficient to derive probability in the sense of credence, and thus that this solution to the problem fails.")
 
-SECS=[('book','Book'),('articles','Articles'),('reviews','Book reviews'),('progress','Under review &amp; in progress')]
+SECS=[('book','Book'),('articles','Articles'),('reviews','Book reviews'),('under-review','Under review'),('working-papers','Working papers')]
+SECKEY={'review':'under-review','working':'working-papers'}
 def item(p):
-    typ=f'<span class="type">{p["typ"]}</span>' if p['sec']=='progress' else ''
+    # Under review is said by the section; a different status there (e.g. Revise and resubmit) still shows.
+    typ=f'<span class="type">{p["typ"]}</span>' if (p['sec']=='working' or (p['sec']=='review' and p['typ']!='Under review')) else ''
     yr=f'<span class="year">{p["year"]}</span>' if p['year'] else ''
     meta=f'<div class="work-meta">{yr}{typ}</div>'
     links=''.join(f'<a href="{u.replace("&","&amp;") if "&amp;" not in u else u}">{l}</a>' for l,u in p['links'])
@@ -88,7 +90,7 @@ def item(p):
       </li>'''
 out=[]
 for key,label in SECS:
-    items=[p for p in P if p['sec']==key]
+    items=[p for p in P if SECKEY.get(p['sec'],p['sec'])==key]
     out.append(f'''<section class="section" id="{key}" aria-labelledby="h-{key}">
   <p class="label" id="h-{key}">{label}</p>
   <div class="body">
@@ -98,6 +100,6 @@ for key,label in SECS:
   </div>
 </section>
 ''')
-counts={k:len([p for p in P if p['sec']==k]) for k,_ in SECS}
+counts={k:len([p for p in P if SECKEY.get(p['sec'],p['sec'])==k]) for k,_ in SECS}
 sys.stdout.write(''.join(out))
 sys.stderr.write(str(counts))
