@@ -104,6 +104,7 @@ document.querySelectorAll(".photo img").forEach(function (img) {
     else if (root.getAttribute("data-motion") === "paused") { root.removeAttribute("data-motion"); P.set("motion", "move"); if (P.resume) P.resume(); }
     else { P.set("motion", "move"); location.reload(); return; } // opened still: the figures start from the top
     label();
+    document.dispatchEvent(new CustomEvent("dh:motion"));
   });
   label();
 })();

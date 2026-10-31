@@ -114,12 +114,21 @@
     raf = visible && !document.hidden ? requestAnimationFrame(loop) : 0;
   }
   function poster() { if (reduce || phase !== "enter") return; var f = fade; fade = 1; render(); fade = f; } // a still of the opening state, so the figure is never blank
-  function go() { if (!raf && !reduce) { last = 0; raf = requestAnimationFrame(loop); } }
+  // Paused with the Pause button: a figure that has not started yet shows the same still as under
+  // reduced motion, and one that was running stays where it stopped.
+  function paused() { return document.documentElement.getAttribute("data-motion") === "paused"; }
+  function settle() { fade = 1; while (shots.length < 2 * ROUNDS) shoot(shots.length % 2); clock = 99; shown = total.slice(); verdict = total[1] > total[0] ? "delegate" : "keep"; red = 1; phase = "settle"; t = 0; }
+  function go() {
+    if (reduce) return;
+    if (paused()) { if (phase === "enter") settle(); render(); return; }
+    if (!raf) { last = 0; raf = requestAnimationFrame(loop); }
+  }
   readPalette(); size(); reset();
-  if (reduce) { fade = 1; while (shots.length < 2 * ROUNDS) shoot(shots.length % 2); clock = 99; shown = total.slice(); verdict = total[1] > total[0] ? "delegate" : "keep"; red = 1; render(); }
+  if (reduce) { settle(); render(); }
   else go();
   if (window.IntersectionObserver) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) { if (phase === "enter") { t = Math.max(t, 1.0); fade = 1; } size(); if (reduce) render(); else go(); } else poster(); }).observe(canvas.parentElement);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) go(); });
-  window.addEventListener("resize", function () { size(); if (phase === "enter" && !reduce) poster(); else render(); }); // resizing clears the canvas, so redraw
-  document.addEventListener("dh:prefs", function () { readPalette(); size(); if (reduce) render(); });
+  document.addEventListener("dh:motion", function () { if (visible) go(); });
+  window.addEventListener("resize", function () { size(); if (paused()) go(); else if (phase === "enter" && !reduce) poster(); else render(); }); // resizing clears the canvas, so redraw
+  document.addEventListener("dh:prefs", function () { readPalette(); size(); if (reduce) render(); else if (paused()) go(); });
 })();

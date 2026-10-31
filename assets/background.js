@@ -817,28 +817,34 @@ function runStage(canvas, fixed) {
     if (!STAGE) applyScrim();
     if (scene.over) scene.over();
   }
+  // Paused with the Pause button: requestAnimationFrame is held, so the stage draws what it can
+  // directly. A stage that has barely run gets the reduced-motion still instead of a blank.
+  var ran = 0, evSeen = root.getAttribute("data-ev");
+  function paused() { return root.getAttribute("data-motion") === "paused"; }
+  function still() { for (var s = 0; s < scene.warm; s += 0.05) scene.update(0.05); ran = scene.warm; render(); }
   function start() {
     var name = fixed || root.getAttribute("data-bg") || "simplex";
     if (!SCENES[name]) name = "simplex";
     sceneName = name; scene = SCENES[name](); scene.reset();
-    cancelAnimationFrame(raf);
+    cancelAnimationFrame(raf); ran = 0;
+    if (paused()) { raf = 0; still(); return; }
     if (reduceQuery.matches) { // one still frame from partway through a run
       for (var s = 0; s < scene.warm; s += 0.05) scene.update(0.05);
       render(); return;
     }
-    if (fixed) { for (var w = 0; w < 1.6; w += 0.05) scene.update(0.05); render(); } // past the fade-in, so a still frame is never blank
+    if (fixed) { for (var w = 0; w < 1.6; w += 0.05) scene.update(0.05); ran = 1.6; render(); } // past the fade-in, so a still frame is never blank
     else if (STAGE && !seen) { scene.update(1.3); render(); return; } // hold the starting positions until the reader can see them
     last = 0; raf = requestAnimationFrame(loop);
   }
   function loop(now) {
     var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016; last = now;
-    scene.update(dt); render();
+    scene.update(dt); ran += dt; render();
     // The home animation keeps running when scrolled past, so its pulse still reaches the reader.
     raf = !fixed || visibleStage ? requestAnimationFrame(loop) : 0;
   }
   // A faint red wash across the page, centred on a point in the canvas.
   if (!fixed) window.DH_FLASH = function (p) {
-    if (reduceQuery.matches || document.hidden) return;
+    if (reduceQuery.matches || document.hidden || paused()) return;
     var r = canvas.getBoundingClientRect(), el = document.createElement("div");
     // If the corner has scrolled out of view, the pulse comes in from the nearest edge of the window.
     var fx = r.left + p.x, fy = clamp(r.top + p.y, -0.08 * window.innerHeight, 1.08 * window.innerHeight);
@@ -862,22 +868,32 @@ function runStage(canvas, fixed) {
     new IntersectionObserver(function (es) {
       visibleStage = es[0].isIntersecting;
       if (!seen && es[0].intersectionRatio >= 0.6) seen = true;
-      if (visibleStage && seen && !raf && !document.hidden && !reduceQuery.matches) { last = 0; raf = requestAnimationFrame(loop); }
+      if (visibleStage && seen && !raf && !document.hidden && !reduceQuery.matches && !paused()) { last = 0; raf = requestAnimationFrame(loop); }
     }, { threshold: [0, 0.6] }).observe(canvas.parentElement);
   } else seen = true;
   var resizeTimer;
   window.addEventListener("resize", function () {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () { var w = W, h = H; size(); if (Math.abs(w - W) > 40 || Math.abs(h - H) > 120) start(); else if (scene.resize) scene.resize(); if (reduceQuery.matches) render(); }, 150);
+    resizeTimer = setTimeout(function () { var w = W, h = H; size(); if (Math.abs(w - W) > 40 || Math.abs(h - H) > 120) start(); else if (scene.resize) scene.resize(); if (reduceQuery.matches || paused()) render(); }, 150);
   });
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) { cancelAnimationFrame(raf); raf = 0; }
     else if (!reduceQuery.matches && !raf) { last = 0; raf = requestAnimationFrame(loop); }
   });
+  document.addEventListener("dh:motion", function () {
+    if (paused()) { if (STAGE && visibleStage && ran < 2) still(); return; }
+    if (!raf && !document.hidden && !reduceQuery.matches && (!STAGE || (visibleStage && seen))) { last = 0; raf = requestAnimationFrame(loop); }
+  });
   document.addEventListener("dh:prefs", function () {
     readPalette();
     if (STAGE && fixed) { var w0 = W; size(); if (W !== w0 && scene.resize) scene.resize(); } // a stage shown by a switch was sized while hidden
-    if (!fixed && (root.getAttribute("data-bg") || "simplex") !== sceneName) start(); else if (scene.restart) scene.restart(); else if (reduceQuery.matches) render();
+    if (!fixed && (root.getAttribute("data-bg") || "simplex") !== sceneName) start();
+    else if (scene.restart) { // the simplex's evidence switch; other switches leave it alone
+      var ev = root.getAttribute("data-ev"), flipped = ev !== evSeen; evSeen = ev;
+      scene.restart(); if (paused()) { if (flipped) still(); else render(); }
+    }
+    else if (paused()) { if (ran < 2) still(); else render(); } // e.g. a stage shown by a switch while paused
+    else if (reduceQuery.matches) render();
   });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureBand);
 
