@@ -97,6 +97,8 @@ document.querySelectorAll(".photo img").forEach(function (img) {
 document.querySelectorAll(".upcoming[data-until]").forEach(function (el) {
   if (new Date() >= new Date(el.getAttribute("data-until") + "T00:00:00")) el.parentNode.removeChild(el);
 });
+// The Upcoming list on the publications page goes once nothing is left in it.
+document.querySelectorAll("[data-upcoming]").forEach(function (box) { if (!box.querySelector("li")) box.hidden = true; });
 document.querySelectorAll("a.email[data-u]").forEach(function (a) {
   var addr = a.getAttribute("data-u") + "@" + a.getAttribute("data-d");
   a.textContent = addr; a.href = "mailto:" + addr;

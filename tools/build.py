@@ -103,148 +103,153 @@ CONTACT_LINE = f'<p class="contact-line"><a class="email" data-u="danher" data-d
 KEATS = open(G + "/keats.html").read()
 
 # ---------------------------------------------------------------- Talks
-TALKS_SECTION = '''<section class="section" id="talks" aria-labelledby="h-talks">
+# Each talk: its title, then one entry per venue: (invited, venue with date, upcoming-until or None).
+# A venue with an upcoming-until date is listed under Upcoming until that date and labelled
+# (upcoming) in the full list; site.js drops both once the date passes.
+TALKS = [
+    ('Panel: The Language of AI Safety for Science', [
+        (True, 'AISciK Workshop, NeurIPS, Atlanta, December 2026', '2026-12-20'),
+    ]),
+    ('A Bayesian Reduction of Causation', [
+        (False, 'Philosophy of Science Association Biennial, San Diego, November 2026', '2026-11-23'),
+        (False, 'Philosophy of Science Meets Machine Learning, Munich, 2026', None),
+    ]),
+    ('Splitting the Atom: Atomless Semantics for Counterfactuals', [
+        (False, 'Philosophy of Science Association Biennial, San Diego, November 2026', '2026-11-23'),
+        (False, 'PPE Society Annual Meeting, New Orleans, 2025', None),
+    ]),
+    ('Margins of Misalignment: Delegation to AI Beyond the Bayesian Idealization', [
+        (False, 'PPE Society Annual Meeting, New Orleans, November 2026', '2026-11-15'),
+    ]),
+    ('Why Are the Social Sciences Hard?', [
+        (False, 'PPE Society Annual Meeting, New Orleans, November 2026', '2026-11-15'),
+    ]),
+    ('Radical AI Interpretability', [
+        (True, 'Minds, Meaning, and Machines, Hong Kong, November 2026', '2026-11-07'),
+        (False, 'AI Agency and Interpretability Workshop, Pittsburgh, 2026', None),
+    ]),
+    ('Intrapersonal Comparisons under Preference Uncertainty', [
+        (False, 'PPE Society Annual Meeting, London, 2026', None),
+        (False, 'Meeting of the Society for Social Choice and Welfare, Tokyo, 2026', None),
+    ]),
+    ('Can We Attribute Beliefs and Desires to AIs? A Radical Approach', [
+        (True, 'Bennington Center for AI Speaker Series, Bennington, 2026', None),
+    ]),
+    ('The Metaphor Problem for Belief Representation in Large Language Models', [
+        (True, 'Pacific APA, online, 2026', None),
+    ]),
+    ('A Decision-Theoretic Approach for Managing Misalignment', [
+        (False, 'International Association for Safe and Ethical AI, Paris, 2026', None),
+    ]),
+    ('Machine Minds and the Propositional Projection Problem', [
+        (True, 'Central APA, Chicago, 2026', None),
+    ]),
+    ('Comments on Cappelen and Dever’s <i>Making AI Intelligible</i>', [
+        (True, 'Eastern APA, Baltimore, 2026', None),
+    ]),
+    ('Standards for Belief Representation in LLMs', [
+        (True, 'Bennington Science Workshop, 2026', None),
+        (True, 'MCMP Research Seminar in Decision and Action Theory, Munich, 2024', None),
+        (False, 'Philosophy of Science Association Biennial, New Orleans, 2024', None),
+        (True, 'InDeep Consortium Meeting, Groningen, 2024', None),
+        (False, 'Philosophy of Science Meets Machine Learning, Tübingen, 2024', None),
+    ]),
+    ('Naturalizing Causation in Causal Models', [
+        (True, 'Agent Foundations Workshop, Pittsburgh, 2025', None),
+    ]),
+    ('Pragmatics, Empiricism, and Self-Assembling Games', [
+        (True, 'Self-Assembling Games Workshop, Irvine, 2025', None),
+    ]),
+    ('Deference and Decision', [
+        (True, 'Agent Foundations Workshop, Pittsburgh, 2025', None),
+        (True, 'Pittsburgh Formal Epistemology Workshop, 2025', None),
+        (True, 'UCI Game Theory Lab, Irvine, 2025', None),
+    ]),
+    ('Manageable Misalignment', [
+        (True, 'Agent Foundations Workshop, Pittsburgh, 2025', None),
+        (False, 'PPE Society Annual Meeting, New Orleans, 2024', None),
+    ]),
+    ('Decision Theory Foundations', [
+        (True, 'ILIAD Conference, Berkeley, 2024', None),
+    ]),
+    ('Measuring the Beliefs of LLMs', [
+        (True, 'Purdue University Philosophy Colloquium, West Lafayette, 2024', None),
+        (True, 'AI and Logic Talk, Groningen, 2024', None),
+    ]),
+]
+
+# Talk titles that are also entries on the publications page link to them.
+TALK_PUB = {
+    "A Bayesian Reduction of Causation": "pub-causation",
+    "Why Are the Social Sciences Hard?": "pub-social-sciences",
+    "Radical AI Interpretability": "pub-book",
+    "A Decision-Theoretic Approach for Managing Misalignment": "pub-misalignment",
+    "Standards for Belief Representation in LLMs": "pub-belief-standards",
+    "Deference and Decision": "pub-deference",
+}
+MONTHS = "January February March April May June July August September October November December".split()
+
+
+def talk_title(t):
+    return f'<a href="#{TALK_PUB[t]}">{t}</a>' if t in TALK_PUB else t
+
+
+def venue_html(inv, v, until):
+    tag = '<span class="inv">Invited</span> ' if inv else ""
+    up = f' <span class="upcoming" data-until="{until}">(upcoming)</span>' if until else ""
+    return tag + v + up
+
+
+def talks_section():
+    up = sorted(((until, t, inv, v) for t, occ in TALKS for inv, v, until in occ if until))
+    up_items = []
+    for until, t, inv, v in up:
+        when = re.search(r", ((?:%s) \d{4})$" % "|".join(MONTHS), v)
+        place = v[:when.start()] if when else v
+        up_items.append(f'''      <li class="work talk upcoming" data-until="{until}">
+        <div class="work-meta"><span class="year">{when.group(1) if when else ""}</span></div>
+        <div class="work-main">
+          <p class="work-title">{talk_title(t)}</p>
+          <p class="work-venue">{('<span class="inv">Invited</span> ' if inv else '') + place}</p>
+        </div>
+      </li>''')
+    all_items = []
+    for t, occ in TALKS:
+        years = sorted({int(y) for _, v, _ in occ for y in re.findall(r"\b(20\d\d)\b", v)})
+        yr = str(years[0]) if len(years) == 1 else f"{years[0]}–{years[-1]}"
+        n = len(occ)
+        venues = "\n".join(f"            <li>{venue_html(*o)}</li>" for o in occ)
+        all_items.append(f'''      <li class="work talk">
+        <div class="work-meta"><span class="year">{yr}</span><span class="type">{n} talk{"s" if n > 1 else ""}</span></div>
+        <div class="work-main">
+          <p class="work-title">{talk_title(t)}</p>
+          <ul class="occasions">
+{venues}
+          </ul>
+        </div>
+      </li>''')
+    upcoming = ('''    <div class="talks-upcoming" data-upcoming>
+      <h3 class="list-head" id="upcoming">Upcoming</h3>
+      <ul class="works">
+''' + "\n".join(up_items) + '''
+      </ul>
+    </div>
+''') if up_items else ""
+    return f'''<section class="section" id="talks" aria-labelledby="h-talks">
   <p class="label" id="h-talks">Talks</p>
   <div class="body">
-    <p class="secondary">Talks since 2024, most recent first. Other venues for the same talk are listed together.</p>
+{upcoming}    <h3 class="list-head">All talks</h3>
+    <p class="secondary">Talks since 2024, most recent first.</p>
     <ul class="works">
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">Panel: The Language of AI Safety for Science</p>
-          <p class="work-venue"><span class="inv">Invited</span> AISciK Workshop, NeurIPS, Atlanta, December 2026 <span class="upcoming" data-until="2026-12-20">(upcoming)</span></p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">A Bayesian Reduction of Causation</p>
-          <p class="work-venue">Philosophy of Science Association Biennial, San Diego, November 2026 <span class="upcoming" data-until="2026-11-23">(upcoming)</span>; Philosophy of Science Meets Machine Learning, Munich, 2026</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">Splitting the Atom: Atomless Semantics for Counterfactuals</p>
-          <p class="work-venue">Philosophy of Science Association Biennial, San Diego, November 2026 <span class="upcoming" data-until="2026-11-23">(upcoming)</span>; PPE Society Annual Meeting, New Orleans, 2025</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">Margins of Misalignment: Delegation to AI Beyond the Bayesian Idealization</p>
-          <p class="work-venue">PPE Society Annual Meeting, New Orleans, November 2026 <span class="upcoming" data-until="2026-11-15">(upcoming)</span></p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">Why Are the Social Sciences Hard?</p>
-          <p class="work-venue">PPE Society Annual Meeting, New Orleans, November 2026 <span class="upcoming" data-until="2026-11-15">(upcoming)</span></p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">Radical AI Interpretability</p>
-          <p class="work-venue"><span class="inv">Invited</span> Minds, Meaning, and Machines, Hong Kong, November 2026 <span class="upcoming" data-until="2026-11-07">(upcoming)</span>; AI Agency and Interpretability Workshop, Pittsburgh, 2026</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">Intrapersonal Comparisons under Preference Uncertainty</p>
-          <p class="work-venue">PPE Society Annual Meeting, London, 2026; Meeting of the Society for Social Choice and Welfare, Tokyo, 2026</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">Can We Attribute Beliefs and Desires to AIs? A Radical Approach</p>
-          <p class="work-venue"><span class="inv">Invited</span> Bennington Center for AI Speaker Series, Bennington, 2026</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">The Metaphor Problem for Belief Representation in Large Language Models</p>
-          <p class="work-venue"><span class="inv">Invited</span> Pacific APA, online, 2026</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">A Decision-Theoretic Approach for Managing Misalignment</p>
-          <p class="work-venue">International Association for Safe and Ethical AI, Paris, 2026</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">Machine Minds and the Propositional Projection Problem</p>
-          <p class="work-venue"><span class="inv">Invited</span> Central APA, Chicago, 2026</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">Comments on Cappelen and Dever’s <i>Making AI Intelligible</i></p>
-          <p class="work-venue"><span class="inv">Invited</span> Eastern APA, Baltimore, 2026</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2026</span></div>
-        <div class="work-main">
-          <p class="work-title">Standards for Belief Representation in LLMs</p>
-          <p class="work-venue"><span class="inv">Invited</span> Bennington Science Workshop, 2026; <span class="inv">Invited</span> MCMP Research Seminar in Decision and Action Theory, Munich, 2024; Philosophy of Science Association Biennial, New Orleans, 2024; <span class="inv">Invited</span> InDeep Consortium Meeting, Groningen, 2024; Philosophy of Science Meets Machine Learning, Tübingen, 2024</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2025</span></div>
-        <div class="work-main">
-          <p class="work-title">Naturalizing Causation in Causal Models</p>
-          <p class="work-venue"><span class="inv">Invited</span> Agent Foundations Workshop, Pittsburgh, 2025</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2025</span></div>
-        <div class="work-main">
-          <p class="work-title">Pragmatics, Empiricism, and Self-Assembling Games</p>
-          <p class="work-venue"><span class="inv">Invited</span> Self-Assembling Games Workshop, Irvine, 2025</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2025</span></div>
-        <div class="work-main">
-          <p class="work-title">Deference and Decision</p>
-          <p class="work-venue"><span class="inv">Invited</span> Agent Foundations Workshop, Pittsburgh, 2025; <span class="inv">Invited</span> Pittsburgh Formal Epistemology Workshop, 2025; <span class="inv">Invited</span> UCI Game Theory Lab, Irvine, 2025</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2025</span></div>
-        <div class="work-main">
-          <p class="work-title">Manageable Misalignment</p>
-          <p class="work-venue"><span class="inv">Invited</span> Agent Foundations Workshop, Pittsburgh, 2025; PPE Society Annual Meeting, New Orleans, 2024</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2024</span></div>
-        <div class="work-main">
-          <p class="work-title">Decision Theory Foundations</p>
-          <p class="work-venue"><span class="inv">Invited</span> ILIAD Conference, Berkeley, 2024</p>
-        </div>
-      </li>
-      <li class="work talk">
-        <div class="work-meta"><span class="year">2024</span></div>
-        <div class="work-main">
-          <p class="work-title">Measuring the Beliefs of LLMs</p>
-          <p class="work-venue"><span class="inv">Invited</span> Purdue University Philosophy Colloquium, West Lafayette, 2024; <span class="inv">Invited</span> AI and Logic Talk, Groningen, 2024</p>
-        </div>
-      </li>
+{chr(10).join(all_items)}
     </ul>
   </div>
 </section>
 '''
+
+
+TALKS_SECTION = talks_section()
+TALK_COUNT = sum(len(occ) for _, occ in TALKS)
 HOME_TALKS = section("recent-talks", "Recent and upcoming talks", '''    <ul class="featured" data-talks>
       <li data-date="2026-11-06"><div><span class="t">Radical AI Interpretability</span><span class="d">Minds, Meaning, and Machines, Hong Kong, November 2026</span></div></li>
       <li data-date="2026-11-14"><div><span class="t">Margins of Misalignment: Delegation to AI Beyond the Bayesian Idealization</span><span class="d">PPE Society Annual Meeting, New Orleans, November 2026</span></div></li>
@@ -345,19 +350,19 @@ pubs = open(G + "/pubs.html").read()
 
 def contents_line(pubs, talks):
     """Section links with counts, computed from the HTML so they cannot go stale.
-    A talk given at several venues counts once per venue (they are joined by '; ')."""
+    A talk given at several venues counts once per venue."""
     out = []
     for sid, label, body in re.findall(r'<section class="section" id="([^"]+)".*?<p class="label"[^>]*>(.*?)</p>(.*?)</section>', pubs, flags=re.S):
         n = body.count('<li class="work"')
         out.append(f'<span><a href="#{sid}">{label}</a> ({n})</span>')
-    venues = re.findall(r'<li class="work talk">.*?<p class="work-venue">(.*?)</p>', talks, flags=re.S)
-    out.append(f'<span><a href="#talks">Talks</a> ({sum(v.count("; ") + 1 for v in venues)})</span>')
+    out.append(f'<span><a href="#talks">Talks</a> ({talks})</span>')
     return '  <p class="contents">' + " · ".join(out) + "</p>\n"
 
 
 publications = f'''<section class="hero page-head" aria-labelledby="hero-title">
   <h1 id="hero-title">Publications and talks</h1>
-{contents_line(pubs, TALKS_SECTION)}  <div class="epigraph">
+{contents_line(pubs, TALK_COUNT)}
+  <div class="epigraph">
     <p class="poem">Drive my dead thoughts over the universe<br>Like wither’d leaves to quicken a new birth!</p>
     <p class="attrib">— Percy Bysshe Shelley, <a href="https://www.poetryfoundation.org/poems/45134/ode-to-the-west-wind">Ode to the West Wind</a></p>
   </div>

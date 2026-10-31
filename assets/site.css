@@ -439,7 +439,15 @@ details.how summary { white-space: nowrap; }
 .profiles--lede { grid-column: 2; margin: 1rem 0 0; }
 
 /* Talks: invited venues, as on the CV. */
-.work-venue .inv { font-family: var(--sans); font-size: 0.68em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-2); margin-right: 0.25em; }
+.work-venue .inv, .occasions .inv { font-family: var(--sans); font-size: 0.68em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-2); margin-right: 0.25em; }
+/* Talks: an Upcoming list, then each talk with its venues one per line. */
+.list-head { font-family: var(--sans); font-size: 0.68rem; font-weight: 500; font-style: normal; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-2); line-height: 1.5; margin: 2.4rem 0 0.2rem; }
+.body > .list-head:first-child, .talks-upcoming:first-child > .list-head { margin-top: 0; }
+.talks-upcoming { margin-bottom: 1.2rem; }
+.occasions { list-style: none; padding: 0; margin: 0.2rem 0 0; font-size: 0.98rem; line-height: 1.4; color: var(--fg-2); }
+.occasions li + li { margin-top: 0.3rem; }
+.body .work-title a:not(.t) { color: var(--fg); }
+.body .work-title a:not(.t):hover { color: var(--red-hover); }
 .featured li[hidden] { display: none; }
 
 /* Cite: the BibTeX for a paper, generated from checked records, with a copy button. */
