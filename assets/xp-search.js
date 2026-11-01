@@ -35,7 +35,7 @@
   function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 
   // ---- Trees. Positions are relative to the element's top-left corner, so scrolling is free.
-  // Each node owns an angular sector and its children split it, so no two edges cross.
+  // Each node owns an angular sector and its children split it; untangle() below removes the rare collisions.
   // D is the full depth; big trees (the card) have more levels, longer edges and fewer early deaths.
   function branch(parent, depth, a0, a1, witness, D, big) {
     D = D || CFG.depth;
@@ -55,10 +55,38 @@
     }
     return n;
   }
+  // No two edges may cross or run closer than CLEAR px. Sector widening can let cousins collide, so
+  // after growing a tree, cut any non-witness branch that does (the later one in growth order);
+  // the witness path is never cut. Returns false if the witness path collides with itself.
+  var CLEAR = 4;
+  function segDist(a, b, c, d) {
+    function orient(p, q, r) { return (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x); }
+    var o1 = orient(a, b, c), o2 = orient(a, b, d), o3 = orient(c, d, a), o4 = orient(c, d, b);
+    if (((o1 > 0) !== (o2 > 0)) && ((o3 > 0) !== (o4 > 0))) return 0;
+    function pd(p, u, v) { var dx = v.x - u.x, dy = v.y - u.y, L = dx * dx + dy * dy, t = L ? Math.max(0, Math.min(1, ((p.x - u.x) * dx + (p.y - u.y) * dy) / L)) : 0; return Math.hypot(p.x - u.x - t * dx, p.y - u.y - t * dy); }
+    return Math.min(pd(a, c, d), pd(b, c, d), pd(c, a, b), pd(d, a, b));
+  }
+  function untangle(roots) {
+    for (var guard = 0; guard < 400; guard++) {
+      var edges = [];
+      roots.forEach(function walk(n) { n.kids.forEach(function (c) { edges.push(c); walk(c); }); });
+      var hit = null;
+      for (var i = 0; i < edges.length && !hit; i++) for (var j = i + 1; j < edges.length; j++) {
+        var e = edges[i], f = edges[j];
+        if (e.parent === f.parent || e === f.parent || f === e.parent) continue; // edges that share a node
+        if (segDist(e.parent, e, f.parent, f) < CLEAR) { hit = [e, f]; break; }
+      }
+      if (!hit) return true;
+      var victim = !hit[1].witness ? hit[1] : !hit[0].witness ? hit[0] : null;
+      if (!victim) return false;
+      var k = victim.parent.kids; k.splice(k.indexOf(victim), 1);
+    }
+    return true;
+  }
   function navTree(el) { // hang below the middle of the word
     // Two first branches either side of straight down, as the card's trees grow from the border.
     var r = el.getBoundingClientRect(), o = { x: r.width / 2, y: r.height + 3, d: 0, kids: [] }, solvable = Math.random() < CFG.pWitness, w = Math.floor(Math.random() * 2), down = Math.PI / 2;
-    for (var i = 0; i < 2; i++) o.kids.push(branch(o, 1, down - 1.1 + 1.1 * i, down + 1.1 * i, solvable && i === w, CFG.navDepth, true));
+    do { o.kids = []; for (var i = 0; i < 2; i++) o.kids.push(branch(o, 1, down - 1.1 + 1.1 * i, down + 1.1 * i, solvable && i === w, CFG.navDepth, true)); } while (!untangle([o]));
     return { start: o, exits: [o] };
   }
   function cardTree(el, fromS) { // the light runs along the border to a random point, and a tree grows there
@@ -66,7 +94,7 @@
     var s = (fromS + rand(0.25, 0.75) * per) % per, p = onBorder(s, W, H), nrm;
     if (s < W) nrm = -Math.PI / 2; else if (s < W + H) nrm = 0; else if (s < 2 * W + H) nrm = Math.PI / 2; else nrm = Math.PI;
     var e = { x: p.x, y: p.y, d: 0, kids: [], s: s }, w = Math.floor(Math.random() * 2);
-    for (var i = 0; i < 2; i++) e.kids.push(branch(e, 1, nrm - 1.1 + 1.1 * i, nrm + 1.1 * i, sol && i === w, CFG.cardDepth, true));
+    do { e.kids = []; for (var i = 0; i < 2; i++) e.kids.push(branch(e, 1, nrm - 1.1 + 1.1 * i, nrm + 1.1 * i, sol && i === w, CFG.cardDepth, true)); } while (!untangle([e]));
     return { start: onBorder(fromS, W, H), fromS: fromS, exits: [e], W: W, H: H };
   }
   // Where a point at arc length s lies on the card's border (clockwise from the top-left).
