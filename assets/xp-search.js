@@ -4,7 +4,9 @@
 // and dead ends cost it a short pause. Some trees (about two in five) hold one witness branch
 // that reaches the full depth; when the light gets there, the path from the start sweeps green.
 // Otherwise the light exhausts the tree, rests, and a new one grows.
-//   Header link: the tree hangs below the middle of the word, growing down into the page.
+//   Header link: the tree hangs below the middle of the word, growing down into the page. It is
+//   grown like the card's trees, one level deeper (about twice the old height), and holds a witness
+//   just as often (pWitness, two in five).
 //   Card: the light runs quickly along the border to a random point, and a tree grows there;
 //   after a find or a dead tree, it runs on to a new point.
 // When the pointer leaves, the search pauses and the drawing fades slowly; coming back
@@ -15,7 +17,7 @@
   if (!targets.length) return;
   var root = document.documentElement, canvas, ctx, DPR = 1, raf = 0, last = 0;
   var active = null, hover = false;
-  var CFG = { depth: 5, cardDepth: 7, pWitness: 0.4, speed: 160, walkFactor: 5.5, backFactor: 1.6, deadEnd: 0.24, decide: 0.05,
+  var CFG = { depth: 5, navDepth: 8, cardDepth: 7, pWitness: 0.4, speed: 160, walkFactor: 5.5, backFactor: 1.6, deadEnd: 0.24, decide: 0.05,
               sweep: 1.1, hold: 1.4, rest: 0.7, dissolve: 1.7, gap: 0.8, fadeOut: 3.9 };
   var GREEN = "31,164,99";
 
@@ -54,11 +56,9 @@
     return n;
   }
   function navTree(el) { // hang below the middle of the word
-    var r = el.getBoundingClientRect(), o = { x: r.width / 2, y: r.height + 3, d: 0, kids: [] }, k = 3, solvable = Math.random() < CFG.pWitness, w = Math.floor(Math.random() * k);
-    for (var i = 0; i < k; i++) {
-      var a0 = Math.PI * (0.18 + 0.64 * i / k), a1 = Math.PI * (0.18 + 0.64 * (i + 1) / k);
-      o.kids.push(branch(o, 1, a0, a1, solvable && i === w));
-    }
+    // Two first branches either side of straight down, as the card's trees grow from the border.
+    var r = el.getBoundingClientRect(), o = { x: r.width / 2, y: r.height + 3, d: 0, kids: [] }, solvable = Math.random() < CFG.pWitness, w = Math.floor(Math.random() * 2), down = Math.PI / 2;
+    for (var i = 0; i < 2; i++) o.kids.push(branch(o, 1, down - 1.1 + 1.1 * i, down + 1.1 * i, solvable && i === w, CFG.navDepth, true));
     return { start: o, exits: [o] };
   }
   function cardTree(el, fromS) { // the light runs along the border to a random point, and a tree grows there
@@ -90,7 +90,7 @@
       (function dfs(n) {
         shuffle(n.kids.slice()).forEach(function (c) {
           moves.push({ a: n, b: c, edge: c, pause: CFG.decide });
-          if (c.d >= (T.W !== undefined ? CFG.cardDepth : CFG.depth)) { moves.push({ goal: c }); return; }
+          if (c.d >= (T.W !== undefined ? CFG.cardDepth : CFG.navDepth)) { moves.push({ goal: c }); return; }
           dfs(c);
           moves.push({ a: c, b: n, back: true, pause: c.kids.length ? 0 : CFG.deadEnd });
         });
