@@ -121,6 +121,9 @@ KEATS = open(G + "/keats.html").read()
 # A venue with an upcoming-until date is listed under Upcoming until that date and labelled
 # (upcoming) in the full list; site.js drops both once the date passes.
 TALKS = [
+    ('Panel (moderator): Is It the End of the World as We Know It?', [
+        (True, 'AI for Public Good Conference, UNC, Chapel Hill, February 2027', '2027-02-09'),
+    ]),
     ('Panel: The Language of AI Safety for Science', [
         (True, 'AISciK Workshop, NeurIPS, Atlanta, December 2026', '2026-12-20'),
     ]),
@@ -339,6 +342,7 @@ HOME_TALKS = section("recent-talks", "Recent and upcoming talks", '''    <ul cla
       <li data-date="2026-11-22" hidden><div><span class="t">A Bayesian Reduction of Causation</span><span class="d">Philosophy of Science Association Biennial, San Diego, November 2026</span></div></li>
       <li data-date="2026-11-22" hidden><div><span class="t">Splitting the Atom: Atomless Semantics for Counterfactuals</span><span class="d">Philosophy of Science Association Biennial, San Diego, November 2026</span></div></li>
       <li data-date="2026-12-12" hidden><div><span class="t">Panel: The Language of AI Safety for Science</span><span class="d">AISciK Workshop, NeurIPS, Atlanta, December 2026</span></div></li>
+      <li data-date="2027-02-08" hidden><div><span class="t">Panel (moderator): Is It the End of the World as We Know It?</span><span class="d">AI for Public Good Conference, UNC, Chapel Hill, February 2027</span></div></li>
     </ul>
     <p class="more"><a href="publications.html#talks">All talks</a></p>''')
 
